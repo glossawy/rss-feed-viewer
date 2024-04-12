@@ -1,26 +1,19 @@
-import { MantineProvider } from '@mantine/core'
-import { useState } from 'react'
+import FeedUrlEntry from '@app/components/FeedUrlEntry'
+import FeedView from '@app/components/FeedView'
+import FeedProvider from '@app/FeedProvider'
+import { Container, MantineProvider } from '@mantine/core'
 
 import '@mantine/core/styles.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <MantineProvider>
-      <div></div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <FeedProvider>
+        <Container size="md" pt="sm">
+          <FeedUrlEntry />
+          <FeedView />
+        </Container>
+      </FeedProvider>
     </MantineProvider>
   )
 }
