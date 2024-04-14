@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, it } from 'bun:test'
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
 
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { HttpHandler, HttpResponse, http } from 'msw'
-import { SetupServerApi, setupServer } from 'msw/node'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
 
 import useFeed from '@app/hooks/feed'
 import { ConsoleMocker } from '@mocks/console'
@@ -24,36 +24,24 @@ function createOneShotSignal(): Signal {
   return signal as Signal
 }
 
+const server = setupServer()
+
 describe('useFeed', () => {
-  let server: SetupServerApi | null = null
-
-  function runTestServer(
-    resolver: (() => HttpResponse) | (() => Promise<HttpResponse>),
-    ...otherHandlers: HttpHandler[]
-  ) {
-    const handlers: HttpHandler[] = [
-      http.get(testUrl, resolver),
-      ...otherHandlers,
-    ]
-
-    server = setupServer(...handlers)
-    server.listen()
-  }
-
   ConsoleMocker.install()
 
-  afterEach(() => {
-    server?.close()
-    server = null
-  })
+  beforeAll(() => server.listen())
+  beforeEach(() => server.resetHandlers())
+  afterAll(() => server.close())
 
   it('has no data and is loading until fetch resolves', async () => {
     const respondSignal = createOneShotSignal()
 
-    runTestServer(async () => {
-      await respondSignal
-      return HttpResponse.xml(Fixtures.rssXml)
-    })
+    server.use(
+      http.get(testUrl, async () => {
+        await respondSignal
+        return HttpResponse.xml(Fixtures.rssXml)
+      }),
+    )
 
     const { result } = renderHook(() => useFeed(testUrl))
     const {
@@ -77,10 +65,12 @@ describe('useFeed', () => {
 
   it('allows for a request to be aborted', () => {
     const respondSignal = createOneShotSignal()
-    runTestServer(async () => {
-      await respondSignal
-      return HttpResponse.xml(Fixtures.rssXml)
-    })
+    server.use(
+      http.get(testUrl, async () => {
+        await respondSignal
+        return HttpResponse.xml(Fixtures.rssXml)
+      }),
+    )
 
     const { result } = renderHook(() => useFeed(testUrl))
     const wasLoading = result.current.loading
@@ -95,11 +85,11 @@ describe('useFeed', () => {
 
   it('aborts pre-existing request when a new one is made', async () => {
     const respondSignal = createOneShotSignal()
-    runTestServer(
-      async () => {
+    server.use(
+      http.get(testUrl, async () => {
         await respondSignal
         return HttpResponse.text('Test')
-      },
+      }),
       http.get(otherTestUrl, async () => {
         return HttpResponse.xml(Fixtures.rssXml)
       }),
@@ -127,11 +117,13 @@ describe('useFeed', () => {
   })
 
   it('returns an error without a parser error if request failed', async () => {
-    runTestServer(() => {
-      return new HttpResponse(null, {
-        status: 404,
-      })
-    })
+    server.use(
+      http.get(testUrl, () => {
+        return new HttpResponse(null, {
+          status: 404,
+        })
+      }),
+    )
 
     const { result } = renderHook(() => useFeed(testUrl))
 
@@ -147,8 +139,10 @@ describe('useFeed', () => {
   })
 
   it('returns an error with a parser error if feed is malformed', async () => {
-    runTestServer(() =>
-      HttpResponse.xml('<not-a-valid-feed></not-a-valid-feed>'),
+    server.use(
+      http.get(testUrl, () =>
+        HttpResponse.xml('<not-a-valid-feed></not-a-valid-feed>'),
+      ),
     )
 
     const { result } = renderHook(() => useFeed(testUrl))
@@ -167,7 +161,7 @@ describe('useFeed', () => {
   })
 
   it('returns a low-level error when a network error occurs', async () => {
-    runTestServer(() => HttpResponse.error())
+    server.use(http.get(testUrl, () => HttpResponse.error()))
 
     const { result } = renderHook(() => useFeed(testUrl))
 
