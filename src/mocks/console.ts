@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, mock } from 'bun:test'
+import { afterAll, beforeEach, mock } from 'bun:test'
 
 const info = console.info
 const warn = console.warn
@@ -28,7 +28,7 @@ export const ConsoleMocker: ConsoleMocker = {
     }
   },
   install() {
-    beforeAll(() => ConsoleMocker.mock())
+    beforeEach(() => ConsoleMocker.mock())
     afterAll(() => ConsoleMocker.unmock())
   },
 }
