@@ -1,29 +1,28 @@
 import { Mock, describe, expect, it } from 'bun:test'
 
 import { renderHook } from '@testing-library/react'
-import { useContext } from 'react'
 
-import { AppStateContext } from '@app/contexts/appState'
+import { useAppState } from '@app/hooks/appState'
 import { ConsoleMocker } from '@app/mocks/console'
 
 describe('AppStateContext', () => {
   ConsoleMocker.install()
 
   it('returns a value by default', () => {
-    const { result } = renderHook(() => useContext(AppStateContext))
+    const { result } = renderHook(() => useAppState())
 
     expect(result.current).not.toBeNull()
   })
 
   it('provides empty defaults', () => {
-    const { result } = renderHook(() => useContext(AppStateContext))
+    const { result } = renderHook(() => useAppState())
 
     expect(result.current.feedUrl).toBeEmpty()
     expect(result.current.errors).toMatchObject({ url: null, feed: null })
   })
 
   it('provides default operations that log to console', () => {
-    const { result } = renderHook(() => useContext(AppStateContext))
+    const { result } = renderHook(() => useAppState())
 
     result.current.setFeedUrl('test url')
     result.current.setAppError('url', {
