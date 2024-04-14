@@ -1,3 +1,6 @@
+[loader]
+".xml" = "text"
+
 [test]
 preload = "./happy.ts"
 
