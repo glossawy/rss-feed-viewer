@@ -6,6 +6,7 @@ import { setupServer } from 'msw/node'
 
 import useFeed from '@app/hooks/feed'
 import { ConsoleMocker } from '@mocks/console'
+import { FakeTimers } from '@mocks/fakeTimers'
 import { Fixtures } from '@mocks/fixtures'
 
 const testUrl = 'https://example.com/.rss'
@@ -32,6 +33,32 @@ describe('useFeed', () => {
   beforeAll(() => server.listen())
   beforeEach(() => server.resetHandlers())
   afterAll(() => server.close())
+
+  it('debounces url changes', async () => {
+    await FakeTimers.use(async (clock) => {
+      server.use(
+        http.get(testUrl, () => HttpResponse.xml(Fixtures.rssXml)),
+        http.get(otherTestUrl, () => HttpResponse.xml(Fixtures.rssXml)),
+      )
+
+      const { result, rerender } = renderHook(
+        ({ url }: { url: string }) =>
+          useFeed(url, { debounceMillis: 10 * 60 * 1000 }),
+        { initialProps: { url: testUrl } },
+      )
+
+      rerender({ url: otherTestUrl })
+
+      await clock.tickAsync(5 * 60 * 1000)
+      expect(result.current.url).toEqual(testUrl)
+
+      await clock.tickAsync(2 * 60 * 1000)
+      expect(result.current.url).toEqual(testUrl)
+
+      await clock.tickAsync(3 * 60 * 1000)
+      expect(result.current.url).toEqual(otherTestUrl)
+    })
+  })
 
   it('has no data and is loading until fetch resolves', async () => {
     const respondSignal = createOneShotSignal()
