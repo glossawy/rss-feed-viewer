@@ -2,34 +2,37 @@ import { createContext } from 'react'
 import Parser from 'rss-parser'
 
 export type Feed = Parser.Output<{ [key: string]: any }> // eslint-disable-line
-type Error = string | null
 
-export type FeedState = {
+export type AppError = {
+  userFacingMessage: string
+  internalMessage: string
+}
+
+export type AppState = {
   feedUrl: string
-  feed: Feed | null
   errors: {
-    url: Error
-    feed: Error
+    url: AppError | null
+    feed: AppError | null
   }
+}
+
+export type AppStateOps = {
+  setFeedUrl: (url: string) => void
+  setAppError: (
+    field: keyof AppState['errors'],
+    message: AppError | null,
+  ) => void
+  clearErrors: () => void
 }
 
 const warnNotSet = (actionDesc: string) => () => {
   console.warn(`Attempted to ${actionDesc} without a context being set`)
 }
 
-export const FeedContext = createContext<
-  FeedState & {
-    setFeedUrl: (url: string) => void
-    setFeed: (feed: Feed) => void
-    setFeedError: (field: keyof FeedState['errors'], message: Error) => void
-    clearErrors: () => void
-  }
->({
+export const AppStateContext = createContext<AppState & AppStateOps>({
   feedUrl: '',
-  feed: null,
   errors: { url: null, feed: null },
-  setFeed: warnNotSet('set feed'),
   setFeedUrl: warnNotSet('change feed url'),
-  setFeedError: warnNotSet('set error'),
+  setAppError: warnNotSet('set error'),
   clearErrors: warnNotSet('clear errors'),
 })

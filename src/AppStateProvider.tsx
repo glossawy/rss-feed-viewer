@@ -1,23 +1,24 @@
-import { Feed, FeedContext, FeedState } from '@app/contexts/feed'
+import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
 import { PropsWithChildren, useCallback, useState } from 'react'
 
 type Props = { initialUrl?: string }
 
-export default function FeedProvider({
+export default function AppStateProvider({
   initialUrl,
   children,
 }: PropsWithChildren<Props>) {
-  const [feedState, setFeedState] = useState<FeedState>({
+  const [feedState, setFeedState] = useState<AppState>({
     feedUrl: initialUrl || '',
-    feed: null,
     errors: {
       url: null,
       feed: null,
     },
   })
 
-  const setFeedError = useCallback(
-    (name: 'url' | 'feed', message: string | null) => {
+  const setAppError = useCallback(
+    (name: 'url' | 'feed', message: AppError | null) => {
+      if (message) console.error(`App Error: ${message.internalMessage}`)
+
       setFeedState((state) => ({
         ...state,
         errors: { ...state.errors, [name]: message },
@@ -35,14 +36,6 @@ export default function FeedProvider({
     [setFeedState],
   )
 
-  const setFeed = useCallback(
-    (feed: Feed) => {
-      setFeedError('feed', null)
-      setFeedState((state) => ({ ...state, feed }))
-    },
-    [setFeedError, setFeedState],
-  )
-
   const setFeedUrl = useCallback(
     (feedUrl: string) => {
       clearErrors()
@@ -52,16 +45,15 @@ export default function FeedProvider({
   )
 
   return (
-    <FeedContext.Provider
+    <AppStateContext.Provider
       value={{
         ...feedState,
-        setFeed,
         setFeedUrl,
-        setFeedError,
+        setAppError,
         clearErrors,
       }}
     >
       {children}
-    </FeedContext.Provider>
+    </AppStateContext.Provider>
   )
 }

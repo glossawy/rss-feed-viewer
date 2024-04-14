@@ -1,4 +1,4 @@
-import { useFeed } from '@app/hooks/feed'
+import { useAppState } from '@app/hooks/appState'
 import { Container, TextInput } from '@mantine/core'
 import { useDebouncedState } from '@mantine/hooks'
 import { IconRss } from '@tabler/icons-react'
@@ -25,15 +25,19 @@ export default function FeedUrlEntry() {
   const {
     errors: { url: urlError },
     setFeedUrl,
-    setFeedError,
-  } = useFeed()
+    setAppError,
+  } = useAppState()
 
   useEffect(() => {
     const newError = validateUrl(url)
 
     if (newError == null) setFeedUrl(url)
-    else setFeedError('url', validateUrl(url))
-  }, [url, setFeedError, setFeedUrl])
+    else
+      setAppError('url', {
+        userFacingMessage: newError,
+        internalMessage: newError,
+      })
+  }, [url, setAppError, setFeedUrl])
 
   const onChange = useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +50,7 @@ export default function FeedUrlEntry() {
     <Container fluid p="sm">
       <TextInput
         onChange={onChange}
-        error={urlError}
+        error={urlError?.userFacingMessage}
         leftSection={<IconRss />}
       />
     </Container>
