@@ -51,6 +51,7 @@ export default tsEslint.config({
         pathGroups: [
           { pattern: '@mantine/**/*', group: 'external' },
           { pattern: '@app/**/*', group: 'internal' },
+          { pattern: '@mocks/**/*', group: 'internal' },
           { pattern: 'bun:*', group: 'builtin' },
         ],
         pathGroupsExcludedImportTypes: [],

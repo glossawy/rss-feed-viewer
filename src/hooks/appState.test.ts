@@ -3,7 +3,7 @@ import { Mock, describe, expect, it } from 'bun:test'
 import { renderHook } from '@testing-library/react'
 
 import { useAppState } from '@app/hooks/appState'
-import { ConsoleMocker } from '@app/mocks/console'
+import { ConsoleMocker } from '@mocks/console'
 
 describe('AppStateContext', () => {
   ConsoleMocker.install()

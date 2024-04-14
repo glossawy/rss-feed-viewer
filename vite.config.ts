@@ -10,7 +10,11 @@ export default defineConfig({
     alias: [
       {
         find: '@app',
-        replacement: path.resolve(__dirname, './src'),
+        replacement: path.join(__dirname, 'src'),
+      },
+      {
+        find: '@mocks',
+        replacement: path.join(__dirname, 'src', 'mocks'),
       },
     ],
   },

@@ -5,8 +5,8 @@ import { HttpHandler, HttpResponse, http } from 'msw'
 import { SetupServerApi, setupServer } from 'msw/node'
 
 import useFeed from '@app/hooks/feed'
-import { ConsoleMocker } from '@app/mocks/console'
-import { Fixtures } from '@app/mocks/fixtures'
+import { ConsoleMocker } from '@mocks/console'
+import { Fixtures } from '@mocks/fixtures'
 
 const testUrl = 'https://example.com/.rss'
 const otherTestUrl = 'https://example.com/other.rss'
