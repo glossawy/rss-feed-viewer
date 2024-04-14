@@ -1,2 +1,5 @@
+[test]
+preload = "./happy.ts"
+
 [install.lockfile]
 print = "yarn"

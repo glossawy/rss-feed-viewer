@@ -49,9 +49,11 @@ export default tsEslint.config({
           'index',
         ],
         pathGroups: [
-          { pattern: '@app', group: 'internal' },
-          { pattern: '@mantine', group: 'external' },
+          { pattern: '@mantine/**/*', group: 'external' },
+          { pattern: '@app/**/*', group: 'internal' },
+          { pattern: 'bun:*', group: 'builtin' },
         ],
+        pathGroupsExcludedImportTypes: [],
         'newlines-between': 'always',
         alphabetize: {
           order: 'asc',

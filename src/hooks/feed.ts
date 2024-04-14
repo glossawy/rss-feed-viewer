@@ -1,12 +1,14 @@
-import { Feed } from '@app/contexts/appState'
 import { useDebouncedValue } from '@mantine/hooks'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Parser from 'rss-parser'
 
-type FeedFetchError = {
-  statusCode: number
-  statusText: string
+import { Feed } from '@app/contexts/appState'
+
+export type FeedFetchError = {
+  statusCode: number | null
+  statusText: string | null
   parserError?: string
+  lowLevelError?: string
 }
 
 type Options = {
@@ -58,7 +60,8 @@ export default function useFeed(
   )
 
   const abort: () => void = useCallback(
-    () => abortController.current?.abort(),
+    (reason: string = 'Manually aborted without reason') =>
+      abortController.current?.abort(reason),
     [],
   )
 
@@ -66,7 +69,8 @@ export default function useFeed(
     if (url.trim() === '') return
 
     if (abortController.current) {
-      abortController.current.abort()
+      console.log('Aborting...')
+      abortController.current.abort('More recent feed request made')
     }
 
     setLoading(true)
@@ -75,6 +79,8 @@ export default function useFeed(
 
     fetch(url, { signal: ac.signal, headers: defaultHeaders })
       .then(async (response) => {
+        if (ac.signal.aborted) return
+
         const fetchError: FeedFetchError = {
           statusCode: response.status,
           statusText: response.statusText,
@@ -84,7 +90,6 @@ export default function useFeed(
           try {
             const xml = await response.text()
             const parsed = await new Parser().parseString(xml)
-
             setFeedData(xml, parsed)
           } catch (err) {
             if (err instanceof Error) fetchError.parserError = err.message
@@ -95,6 +100,26 @@ export default function useFeed(
           }
         } else {
           setError(fetchError)
+        }
+      })
+      .catch((err) => {
+        if (ac.signal.aborted) return
+
+        if (err instanceof DOMException || err instanceof TypeError) {
+          switch (err.name) {
+            case 'AbortError':
+              // Just aborted, do nothing
+              break
+            default:
+              // Could be a network error, let's log it
+              console.error(err)
+              setError({
+                statusCode: null,
+                statusText: null,
+                lowLevelError: err.message,
+              })
+              break
+          }
         }
       })
       .finally(() => {

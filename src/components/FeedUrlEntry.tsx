@@ -1,8 +1,9 @@
-import { useAppState } from '@app/hooks/appState'
 import { Container, TextInput } from '@mantine/core'
 import { useDebouncedState } from '@mantine/hooks'
 import { IconRss } from '@tabler/icons-react'
 import { useCallback, useEffect } from 'react'
+
+import { useAppState } from '@app/hooks/appState'
 
 function validateUrl(urlValue: string): string | null {
   if (urlValue.trim() === '') return null

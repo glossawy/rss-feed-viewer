@@ -1,5 +1,6 @@
-import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
 import { PropsWithChildren, useCallback, useState } from 'react'
+
+import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
 
 type Props = { initialUrl?: string }
 

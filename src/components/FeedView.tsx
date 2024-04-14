@@ -1,7 +1,33 @@
-import { useAppState } from '@app/hooks/appState'
-import useFeed from '@app/hooks/feed'
 import { Container } from '@mantine/core'
 import { useEffect } from 'react'
+
+import { AppError } from '@app/contexts/appState'
+import { useAppState } from '@app/hooks/appState'
+import useFeed, { FeedFetchError } from '@app/hooks/feed'
+
+function toAppError(url: string, error: FeedFetchError): AppError {
+  if (error.parserError) {
+    return {
+      userFacingMessage: 'Feed is either not an RSS feed or is malformed',
+      internalMessage: error.parserError,
+    }
+  } else if (error.lowLevelError) {
+    return {
+      userFacingMessage: 'An unexpected error occurred',
+      internalMessage: error.lowLevelError,
+    }
+  } else if (error.statusCode != null) {
+    return {
+      userFacingMessage: `Failed to fetch feed, ${error.statusCode} - ${error.statusCode}`,
+      internalMessage: `Received ${error.statusCode} ${error.statusText} at ${url}`,
+    }
+  } else {
+    return {
+      userFacingMessage: 'Failed to fetch feed, reason unknown',
+      internalMessage: `Failed to fetch feed for unknown reason at ${url}`,
+    }
+  }
+}
 
 export default function FeedView() {
   const { feedUrl, errors, setAppError } = useAppState()
@@ -14,17 +40,7 @@ export default function FeedView() {
 
   useEffect(() => {
     if (error) {
-      if (error.parserError) {
-        setAppError('feed', {
-          userFacingMessage: 'Feed is either not an RSS feed or is malformed',
-          internalMessage: error.parserError,
-        })
-      } else {
-        setAppError('feed', {
-          userFacingMessage: `Failed to fetch feed, ${error.statusCode} - ${error.statusCode}`,
-          internalMessage: `Received ${error.statusCode} ${error.statusText} at ${fetchedUrl}`,
-        })
-      }
+      setAppError('feed', toAppError(fetchedUrl, error))
     }
   }, [setAppError, fetchedUrl, error])
 
