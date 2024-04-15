@@ -5,7 +5,6 @@ import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
 
 import useFeed from '@app/hooks/feed'
-import { ConsoleMocker } from '@mocks/console'
 import { FakeTimers } from '@mocks/fakeTimers'
 import { Fixtures } from '@mocks/fixtures'
 
@@ -28,8 +27,6 @@ function createOneShotSignal(): Signal {
 const server = setupServer()
 
 describe('useFeed', () => {
-  ConsoleMocker.install()
-
   beforeAll(() => server.listen())
   beforeEach(() => server.resetHandlers())
   afterAll(() => server.close())
@@ -56,7 +53,9 @@ describe('useFeed', () => {
       expect(result.current.url).toEqual(testUrl)
 
       await clock.tickAsync(3 * 60 * 1000)
-      expect(result.current.url).toEqual(otherTestUrl)
+      await waitFor(() => {
+        expect(result.current.url).toEqual(otherTestUrl)
+      })
     })
   })
 

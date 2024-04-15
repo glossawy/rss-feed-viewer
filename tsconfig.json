@@ -7,7 +7,8 @@
     "skipLibCheck": true,
 
     "paths": {
-      "@mocks/*": ["./src/mocks/*"],
+      "@mocks/*": ["./src/testing/mocks/*"],
+      "@testing/*": ["./src/testing/*"],
       "@app/*": ["./src/*"],
     },
 

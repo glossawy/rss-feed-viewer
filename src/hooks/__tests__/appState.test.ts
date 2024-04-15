@@ -3,11 +3,8 @@ import { Mock, describe, expect, it } from 'bun:test'
 import { renderHook } from '@testing-library/react'
 
 import { useAppState } from '@app/hooks/appState'
-import { ConsoleMocker } from '@mocks/console'
 
 describe('AppStateContext', () => {
-  ConsoleMocker.install()
-
   it('returns a value by default', () => {
     const { result } = renderHook(() => useAppState())
 
@@ -33,7 +30,7 @@ describe('AppStateContext', () => {
 
     const warn = console.warn as Mock<(message: string) => void>
 
-    expect(warn.mock.calls).toHaveLength(3)
+    expect(warn).toHaveBeenCalledTimes(3)
     expect(warn.mock.calls[0][0]).toMatch(
       /feed url.+?without a context being set/,
     )

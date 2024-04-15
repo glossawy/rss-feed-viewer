@@ -1,13 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useCallback, useState } from 'react'
 
-import AppStateProvider from '@app/AppStateProvider'
 import { AppError } from '@app/contexts/appState'
 import { useAppState } from '@app/hooks/appState'
-import { ConsoleMocker } from '@mocks/console'
+import renderWithApp from '@testing/renderWithAppState'
 
 class PageObject {
   get feedUrl() {
@@ -75,6 +74,7 @@ function AppStateConsumer() {
 
   const [errorInput, setErrorInput] = useState('')
 
+  console.info(errorInput)
   const onSetError = useCallback(() => {
     const [errorType, userFacingMessage, internalMessage] =
       errorInput.split(':')
@@ -114,17 +114,11 @@ function AppStateConsumer() {
   )
 }
 
-function renderWithProvider(ui: React.ReactNode) {
-  return render(<AppStateProvider>{ui}</AppStateProvider>)
-}
-
 const page = new PageObject()
 
 describe('AppStateProvider', () => {
-  ConsoleMocker.install()
-
   it('has sane defaults', () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     expect(page.feedUrl).toBeEmpty()
     expect(page.errors.url).toMatchObject({
@@ -138,7 +132,7 @@ describe('AppStateProvider', () => {
   })
 
   it('provides a way to set the feed url', async () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     await page.setFeedUrl('https://example.com')
 
@@ -146,7 +140,7 @@ describe('AppStateProvider', () => {
   })
 
   it('clears errors when a new feed url is set', async () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     await page.setAppError('url', 'test', 'test')
     expect(page.errors.url.internalMessage).not.toBeEmpty()
@@ -156,7 +150,7 @@ describe('AppStateProvider', () => {
   })
 
   it('provides a way to set app errors', async () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     const expectedUrlError: AppError = {
       userFacingMessage: 'url error',
@@ -184,7 +178,7 @@ describe('AppStateProvider', () => {
   })
 
   it('logs internal messages for errors when set', async () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     await page.setAppError('url', 'test user facing', 'test internal')
 
@@ -193,7 +187,7 @@ describe('AppStateProvider', () => {
   })
 
   it('provides a way to clear errors', async () => {
-    renderWithProvider(<AppStateConsumer />)
+    renderWithApp(<AppStateConsumer />)
 
     await page.setAppError('url', 'test', 'test')
     expect(page.errors.url.userFacingMessage).not.toBeEmpty()

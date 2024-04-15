@@ -13,8 +13,12 @@ export default defineConfig({
         replacement: path.join(__dirname, 'src'),
       },
       {
+        find: '@testing',
+        replacement: path.join(__dirname, 'src', 'testing'),
+      },
+      {
         find: '@mocks',
-        replacement: path.join(__dirname, 'src', 'mocks'),
+        replacement: path.join(__dirname, 'src', 'testing', 'mocks'),
       },
     ],
   },

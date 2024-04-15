@@ -53,6 +53,7 @@ export default function FeedUrlEntry() {
         onChange={onChange}
         error={urlError?.userFacingMessage}
         leftSection={<IconRss />}
+        placeholder="Enter an RSS feed"
       />
     </Container>
   )
