@@ -1,120 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 
-import { screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { useCallback, useState } from 'react'
-
 import { AppError } from '@app/contexts/appState'
-import { useAppState } from '@app/hooks/appState'
+import {
+  AppStateConsumer,
+  AppStateConsumerPage,
+} from '@testing/AppStateConsumer'
 import renderWithApp from '@testing/renderWithAppState'
 
-class PageObject {
-  get feedUrl() {
-    return this.getFieldValue(/^Feed URL:/)
-  }
-
-  get errors(): { url: AppError; feed: AppError } {
-    return {
-      url: {
-        userFacingMessage: this.getFieldValue(/^User Facing URL Error/),
-        internalMessage: this.getFieldValue(/^Internal URL Error/),
-      },
-      feed: {
-        userFacingMessage: this.getFieldValue(/^User Facing Feed Error/),
-        internalMessage: this.getFieldValue(/^Internal Feed Error/),
-      },
-    }
-  }
-
-  async setAppError(
-    type: 'url' | 'feed',
-    userFacing: string,
-    internal: string,
-  ) {
-    const errorInput = screen.getByLabelText('Error Input:')
-    const errorInputBtn = screen.getByText('Set Error')
-
-    await userEvent.type(
-      errorInput,
-      this.appErrorText(type, userFacing, internal),
-    )
-    await userEvent.click(errorInputBtn)
-
-    userEvent.clear(errorInput)
-  }
-
-  async setFeedUrl(url: string) {
-    const urlInput = screen.getByLabelText('Feed URL Input:')
-    await userEvent.type(urlInput, url)
-  }
-
-  async clearErrors() {
-    const clearErrorsBtn = screen.getByText('Clear Errors')
-    await userEvent.click(clearErrorsBtn)
-  }
-
-  private getFieldValue(pattern: RegExp) {
-    return screen
-      .getByText(pattern)
-      .textContent!.trim()
-      .split(':')
-      .slice(1)
-      .join(':')
-      .trim()
-  }
-
-  private appErrorText(type: string, userFacing: string, internal: string) {
-    return [type, userFacing, internal].join(':')
-  }
-}
-
-function AppStateConsumer() {
-  const { feedUrl, errors, setFeedUrl, setAppError, clearErrors } =
-    useAppState()
-
-  const [errorInput, setErrorInput] = useState('')
-
-  console.info(errorInput)
-  const onSetError = useCallback(() => {
-    const [errorType, userFacingMessage, internalMessage] =
-      errorInput.split(':')
-
-    setAppError(errorType as 'feed' | 'url', {
-      userFacingMessage,
-      internalMessage,
-    })
-  }, [errorInput, setAppError])
-
-  return (
-    <div>
-      <p>Feed URL: {feedUrl}</p>
-      <p>User Facing URL Error: {errors.url?.userFacingMessage}</p>
-      <p>Internal URL Error: {errors.url?.internalMessage}</p>
-      <p>User Facing Feed Error: {errors.feed?.userFacingMessage}</p>
-      <p>Internal Feed Error: {errors.feed?.internalMessage}</p>
-      <div>
-        <label htmlFor="feedUrl">Feed URL Input:</label>
-        <input
-          value={feedUrl}
-          onChange={(evt) => setFeedUrl(evt.target.value)}
-          id="feedUrl"
-        />
-      </div>
-      <div>
-        <label htmlFor="errorInput">Error Input:</label>
-        <input
-          value={errorInput}
-          onChange={(evt) => setErrorInput(evt.target.value)}
-          id="errorInput"
-        />
-        <button onClick={onSetError}>Set Error</button>
-      </div>
-      <button onClick={clearErrors}>Clear Errors</button>
-    </div>
-  )
-}
-
-const page = new PageObject()
+const page = new AppStateConsumerPage()
 
 describe('AppStateProvider', () => {
   it('has sane defaults', () => {

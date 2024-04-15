@@ -4,6 +4,10 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 import FeedUrlEntry from '@app/components/FeedUrlEntry'
+import {
+  AppStateConsumer,
+  AppStateConsumerPage,
+} from '@testing/AppStateConsumer'
 import renderWithApp from '@testing/renderWithAppState'
 
 class PageObject {
@@ -22,10 +26,10 @@ class PageObject {
   }
 }
 
-const page = new PageObject()
-
 describe('FeedUrlEntry', () => {
   it('is initially empty with no error', () => {
+    const page = new PageObject()
+
     renderWithApp(<FeedUrlEntry />)
 
     expect(page.inputElement).toHaveProperty('value', '')
@@ -34,11 +38,12 @@ describe('FeedUrlEntry', () => {
     ).toBeNull()
   })
 
-  it('shows an error when an invalid url is entered', async () => {
-    const user = userEvent.setup()
+  it('shows an error when a non-url is entered', async () => {
+    const page = new PageObject()
+
     renderWithApp(<FeedUrlEntry />)
 
-    await user.type(page.inputElement, 'not a valid url')
+    await page.setUrl('not a valid url')
 
     await waitFor(() => {
       expect(
@@ -48,13 +53,56 @@ describe('FeedUrlEntry', () => {
   })
 
   it('shows an error when an invalid https url is entered', async () => {
-    renderWithApp(<FeedUrlEntry />)
-    const user = userEvent.setup()
+    const page = new PageObject()
 
-    await user.type(page.inputElement, 'https://not a valid url')
+    renderWithApp(<FeedUrlEntry />)
+
+    await page.setUrl('https://not a valid url')
 
     await waitFor(() => {
       expect(screen.queryByText('Invalid URL', { exact: false })).not.toBeNull()
+    })
+  })
+
+  it('updates the feed URL when entered URL is valid', async () => {
+    const page = new PageObject()
+    const statePage = new AppStateConsumerPage()
+    const testUrl = 'https://example.com/.rss'
+
+    renderWithApp(
+      <>
+        <FeedUrlEntry />
+        <AppStateConsumer />
+      </>,
+    )
+
+    expect(statePage.feedUrl).toBeEmpty()
+
+    await page.setUrl(testUrl)
+
+    await waitFor(() => {
+      expect(statePage.feedUrl).toEqual(testUrl)
+    })
+  })
+
+  it('updates the app error state when entered URL is invalid', async () => {
+    const page = new PageObject()
+    const statePage = new AppStateConsumerPage()
+
+    renderWithApp(
+      <>
+        <FeedUrlEntry />
+        <AppStateConsumer />
+      </>,
+    )
+
+    await page.setUrl('not a valid url')
+
+    await waitFor(() => {
+      expect(statePage.errors.url.internalMessage).toMatch(/^Must be an http/i)
+      expect(statePage.errors.url.userFacingMessage).toMatch(
+        /^Must be an http/i,
+      )
     })
   })
 })
