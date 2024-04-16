@@ -2,7 +2,7 @@
 ".xml" = "text"
 
 [test]
-preload = "./happy.ts"
+preload = ["./happy.ts", "./mocking.ts"]
 
 [install.lockfile]
 print = "yarn"

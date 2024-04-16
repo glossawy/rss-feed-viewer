@@ -1,7 +1,6 @@
 import { Container, TextInput } from '@mantine/core'
-import { useDebouncedState } from '@mantine/hooks'
 import { IconRss } from '@tabler/icons-react'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { useAppState } from '@app/hooks/appState'
 
@@ -20,10 +19,15 @@ function validateUrl(urlValue: string): string | null {
   return null
 }
 
-export default function FeedUrlEntry() {
-  const [url, setUrl] = useDebouncedState('', 200)
+type Props = {
+  initialValue?: string
+}
+
+export default function FeedUrlEntry({ initialValue }: Props) {
+  const [url, setUrl] = useState(initialValue || '')
 
   const {
+    feedUrl,
     errors: { url: urlError },
     setFeedUrl,
     setAppError,
@@ -32,13 +36,20 @@ export default function FeedUrlEntry() {
   useEffect(() => {
     const newError = validateUrl(url)
 
-    if (newError == null) setFeedUrl(url)
-    else
-      setAppError('url', {
-        userFacingMessage: newError,
-        internalMessage: newError,
-      })
+    setAppError(
+      'url',
+      newError
+        ? {
+            userFacingMessage: newError,
+            internalMessage: newError,
+          }
+        : null,
+    )
   }, [url, setAppError, setFeedUrl])
+
+  useEffect(() => {
+    if (url !== feedUrl) setUrl(feedUrl)
+  }, [feedUrl])
 
   const onChange = useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,14 +58,25 @@ export default function FeedUrlEntry() {
     [setUrl],
   )
 
+  const onSubmit = useCallback(
+    (evt: React.FormEvent<HTMLFormElement>) => {
+      evt.preventDefault()
+      if (!urlError) setFeedUrl(url)
+    },
+    [url, urlError, setFeedUrl],
+  )
+
   return (
     <Container fluid p="sm">
-      <TextInput
-        onChange={onChange}
-        error={urlError?.userFacingMessage}
-        leftSection={<IconRss />}
-        placeholder="Enter an RSS feed"
-      />
+      <form onSubmit={onSubmit}>
+        <TextInput
+          value={url}
+          onChange={onChange}
+          error={urlError?.userFacingMessage}
+          leftSection={<IconRss />}
+          placeholder="Enter an RSS feed"
+        />
+      </form>
     </Container>
   )
 }

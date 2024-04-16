@@ -51,6 +51,7 @@ export default tsEslint.config({
         pathGroups: [
           { pattern: '@mantine/**/*', group: 'external' },
           { pattern: '@testing-library/**/*', group: 'external' },
+          { pattern: '@tanstack/**/*', group: 'external' },
           { pattern: '@testing/**/*', group: 'internal' },
           { pattern: '@app/**/*', group: 'internal' },
           { pattern: '@mocks/**/*', group: 'internal' },

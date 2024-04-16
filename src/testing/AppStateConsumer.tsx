@@ -47,7 +47,10 @@ export class AppStateConsumerPage {
 
   async setFeedUrl(url: string) {
     const urlInput = screen.getByLabelText('Feed URL Input:')
+    const urlInputBtn = screen.getByText('Set Feed URL')
+    await this.user.clear(urlInput)
     await this.user.type(urlInput, url)
+    await this.user.click(urlInputBtn)
   }
 
   async clearErrors() {
@@ -74,9 +77,9 @@ export function AppStateConsumer() {
   const { feedUrl, errors, setFeedUrl, setAppError, clearErrors } =
     useAppState()
 
+  const [feedInput, setFeedInput] = useState('')
   const [errorInput, setErrorInput] = useState('')
 
-  console.info(errorInput)
   const onSetError = useCallback(() => {
     const [errorType, userFacingMessage, internalMessage] =
       errorInput.split(':')
@@ -97,10 +100,11 @@ export function AppStateConsumer() {
       <div>
         <label htmlFor="feedUrl">Feed URL Input:</label>
         <input
-          value={feedUrl}
-          onChange={(evt) => setFeedUrl(evt.target.value)}
+          value={feedInput}
+          onChange={(evt) => setFeedInput(evt.target.value)}
           id="feedUrl"
         />
+        <button onClick={() => setFeedUrl(feedInput)}>Set Feed URL</button>
       </div>
       <div>
         <label htmlFor="errorInput">Error Input:</label>

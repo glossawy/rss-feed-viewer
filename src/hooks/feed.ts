@@ -1,23 +1,5 @@
-import { useDebouncedValue } from '@mantine/hooks'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Parser from 'rss-parser'
-
-import { Feed } from '@app/contexts/appState'
-
-export type FeedFetchError = {
-  statusCode: number | null
-  statusText: string | null
-  parserError?: string
-  lowLevelError?: string
-}
-
-type Options = {
-  debounceMillis: number
-}
-
-const defaultOptions: Options = {
-  debounceMillis: 500,
-}
 
 const MIME_TYPE_WEIGHTS: [string, number][] = [
   ['application/rss+xml', 1.0],
@@ -37,95 +19,66 @@ const defaultHeaders = (() => {
   return headers
 })()
 
-export default function useFeed(
-  urlValue: string,
-  hookOptions: Partial<Options> = {},
-) {
-  const options: Options = { ...defaultOptions, ...hookOptions }
+type FailureMode = 'request' | 'parser' | 'lowlevel'
+export class FeedFetchError extends Error {
+  failureMode: FailureMode
 
-  const [url] = useDebouncedValue(urlValue, options.debounceMillis)
-  const [loading, setLoading] = useState(false)
-  const [feedXml, setFeedXml] = useState<string | null>(null)
-  const [feed, setFeed] = useState<Feed | null>(null)
-  const [error, setError] = useState<FeedFetchError | null>(null)
+  constructor(message: string, mode: FailureMode, opts?: ErrorOptions) {
+    super(message, opts)
+    this.failureMode = mode
+  }
+}
 
-  const abortController = useRef<AbortController | null>(null)
+export default function useFeed(url: string) {
+  const query = useQuery({
+    queryKey: ['feed', url],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    queryFn: async ({ signal, queryKey: [_feed, queryUrl] }) => {
+      if (url.trim() === '') return null
 
-  const setFeedData = useCallback(
-    (xml: string, feed: Feed) => {
-      setFeedXml(xml)
-      setFeed(feed)
+      const response = await fetch(url, {
+        signal,
+        headers: defaultHeaders,
+        mode: 'cors',
+      }).catch((err) => {
+        switch ((err as Error).name) {
+          case 'AbortError':
+            // Not really important since we likely are
+            // just cancelling the query
+            throw err
+          default:
+            throw new FeedFetchError(err.message, 'lowlevel', { cause: err })
+        }
+      })
+
+      if (response.ok) {
+        try {
+          const xml = await response.text()
+          const parsed = await new Parser().parseString(xml)
+
+          return parsed
+        } catch (err) {
+          let errorMessage: string
+
+          if (err instanceof Error) errorMessage = err.message
+          else if (typeof err === 'string') errorMessage = err
+          else errorMessage = `Unexpected Error: ${err}`
+          throw new FeedFetchError(errorMessage, 'parser', { cause: err })
+        }
+      } else {
+        throw new FeedFetchError(
+          `Non-successful response: ${response.status} @ ${queryUrl}`,
+          'request',
+        )
+      }
     },
-    [setFeedXml, setFeed],
-  )
+    enabled: url.trim() !== '',
+    retry: false,
+    // Extremely unlikely to change often so keep data for 30 minutes
+    staleTime: 1000 * 60 * 30,
+  })
 
-  const abort: () => void = useCallback(
-    (reason: string = 'Manually aborted without reason') =>
-      abortController.current?.abort(reason),
-    [],
-  )
+  const { data: feed, error } = query
 
-  useEffect(() => {
-    if (url.trim() === '') return
-
-    if (abortController.current) {
-      console.log('Aborting...')
-      abortController.current.abort('More recent feed request made')
-    }
-
-    setLoading(true)
-
-    const ac = (abortController.current = new AbortController())
-
-    fetch(url, { signal: ac.signal, headers: defaultHeaders })
-      .then(async (response) => {
-        if (ac.signal.aborted) return
-
-        const fetchError: FeedFetchError = {
-          statusCode: response.status,
-          statusText: response.statusText,
-        }
-
-        if (response.ok) {
-          try {
-            const xml = await response.text()
-            const parsed = await new Parser().parseString(xml)
-            setFeedData(xml, parsed)
-          } catch (err) {
-            if (err instanceof Error) fetchError.parserError = err.message
-            else if (typeof err === 'string') fetchError.parserError = err
-            else fetchError.parserError = `Unexpected Error: ${err}`
-
-            setError(fetchError)
-          }
-        } else {
-          setError(fetchError)
-        }
-      })
-      .catch((err) => {
-        if (ac.signal.aborted) return
-
-        if (err instanceof DOMException || err instanceof TypeError) {
-          switch (err.name) {
-            case 'AbortError':
-              // Just aborted, do nothing
-              break
-            default:
-              // Could be a network error, let's log it
-              console.error(err)
-              setError({
-                statusCode: null,
-                statusText: null,
-                lowLevelError: err.message,
-              })
-              break
-          }
-        }
-      })
-      .finally(() => {
-        if (abortController.current === ac) setLoading(false)
-      })
-  }, [url, setFeedData, setError, setLoading])
-
-  return { url, loading, xml: feedXml, feed, error, abort }
+  return { query, feed, error: error as FeedFetchError | null }
 }

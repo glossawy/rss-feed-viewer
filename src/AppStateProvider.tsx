@@ -1,8 +1,30 @@
-import { PropsWithChildren, useCallback, useState } from 'react'
+import { PropsWithChildren, useCallback, useEffect, useState } from 'react'
 
 import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
+import useFeed, { FeedFetchError } from '@app/hooks/feed'
+import useProxyHistory from '@app/hooks/proxyHistory'
 
 type Props = { initialUrl?: string }
+
+function toAppError(error: FeedFetchError): AppError {
+  switch (error.failureMode) {
+    case 'parser':
+      return {
+        userFacingMessage: 'Feed is either not an RSS feed or is malformed',
+        internalMessage: error.message,
+      }
+    case 'lowlevel':
+      return {
+        userFacingMessage: 'An unexpected error occurred',
+        internalMessage: error.message,
+      }
+    default:
+      return {
+        userFacingMessage: 'Failed to fetch feed',
+        internalMessage: error.message,
+      }
+  }
+}
 
 export default function AppStateProvider({
   initialUrl,
@@ -10,11 +32,50 @@ export default function AppStateProvider({
 }: PropsWithChildren<Props>) {
   const [feedState, setFeedState] = useState<AppState>({
     feedUrl: initialUrl || '',
+    query: {
+      feed: null,
+      isFetched: false,
+      isLoading: false,
+    },
     errors: {
       url: null,
       feed: null,
     },
   })
+
+  const { feedUrl: currentFeedUrl } = feedState
+  const {
+    query: { isLoading, isFetched },
+    error,
+    feed,
+  } = useFeed(currentFeedUrl)
+
+  const { targetUrl } = useProxyHistory(feedState.feedUrl, {
+    enabled: isFetched || feedState.feedUrl === '',
+  })
+
+  useEffect(() => {
+    setFeedState((state) => ({
+      ...state,
+      query: {
+        feed: feed || null,
+        isLoading,
+        isFetched,
+      },
+      errors: {
+        ...state.errors,
+        feed: error && toAppError(error),
+      },
+    }))
+  }, [feed, error, isLoading, isFetched])
+
+  useEffect(() => {
+    if (feed == null) return
+
+    if (targetUrl.current != null && targetUrl.current !== currentFeedUrl) {
+      setFeedUrl(targetUrl.current)
+    }
+  }, [feed, targetUrl, currentFeedUrl])
 
   const setAppError = useCallback(
     (name: 'url' | 'feed', message: AppError | null) => {

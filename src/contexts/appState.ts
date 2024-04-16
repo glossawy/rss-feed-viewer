@@ -1,15 +1,26 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { createContext } from 'react'
 import Parser from 'rss-parser'
 
-export type Feed = Parser.Output<{ [key: string]: any }> // eslint-disable-line
+export type Feed = Parser.Output<{
+  [key: string]: any
+}>
 
 export type AppError = {
   userFacingMessage: string
   internalMessage: string
 }
 
+export type Query = {
+  feed: Feed | null
+  isLoading: boolean
+  isFetched: boolean
+}
+
 export type AppState = {
   feedUrl: string
+  query: Query
   errors: {
     url: AppError | null
     feed: AppError | null
@@ -31,6 +42,11 @@ const warnNotSet = (actionDesc: string) => () => {
 
 export const AppStateContext = createContext<AppState & AppStateOps>({
   feedUrl: '',
+  query: {
+    feed: null,
+    isLoading: false,
+    isFetched: false,
+  },
   errors: { url: null, feed: null },
   setFeedUrl: warnNotSet('change feed url'),
   setAppError: warnNotSet('set error'),

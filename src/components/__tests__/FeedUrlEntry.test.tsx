@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 
 import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import userEvent, { UserEvent } from '@testing-library/user-event'
 
 import FeedUrlEntry from '@app/components/FeedUrlEntry'
 import {
@@ -11,12 +11,24 @@ import {
 import renderWithApp from '@testing/renderWithAppState'
 
 class PageObject {
+  user: UserEvent
+
+  constructor() {
+    this.user = userEvent.setup()
+  }
+
   get inputElement() {
     return screen.getByPlaceholderText('Enter an RSS feed')
   }
 
   async setUrl(url: string) {
-    await userEvent.type(this.inputElement, url)
+    await this.user.clear(this.inputElement)
+    await this.user.type(this.inputElement, url)
+  }
+
+  async submitUrl(url: string) {
+    await this.setUrl(url)
+    await this.user.type(this.inputElement, '{enter}')
   }
 
   debug() {
@@ -78,7 +90,7 @@ describe('FeedUrlEntry', () => {
 
     expect(statePage.feedUrl).toBeEmpty()
 
-    await page.setUrl(testUrl)
+    await page.submitUrl(testUrl)
 
     await waitFor(() => {
       expect(statePage.feedUrl).toEqual(testUrl)

@@ -1,55 +1,55 @@
-import { Container } from '@mantine/core'
-import { useEffect } from 'react'
+import {
+  Anchor,
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core'
+import { IconExternalLink } from '@tabler/icons-react'
 
-import { AppError } from '@app/contexts/appState'
+import FeedItemList from '@app/components/feedView/FeedItemList'
 import { useAppState } from '@app/hooks/appState'
-import useFeed, { FeedFetchError } from '@app/hooks/feed'
-
-function toAppError(url: string, error: FeedFetchError): AppError {
-  if (error.parserError) {
-    return {
-      userFacingMessage: 'Feed is either not an RSS feed or is malformed',
-      internalMessage: error.parserError,
-    }
-  } else if (error.lowLevelError) {
-    return {
-      userFacingMessage: 'An unexpected error occurred',
-      internalMessage: error.lowLevelError,
-    }
-  } else if (error.statusCode != null) {
-    return {
-      userFacingMessage: `Failed to fetch feed, ${error.statusCode} - ${error.statusCode}`,
-      internalMessage: `Received ${error.statusCode} ${error.statusText} at ${url}`,
-    }
-  } else {
-    return {
-      userFacingMessage: 'Failed to fetch feed, reason unknown',
-      internalMessage: `Failed to fetch feed for unknown reason at ${url}`,
-    }
-  }
-}
 
 export default function FeedView() {
-  const { feedUrl, errors, setAppError } = useAppState()
   const {
-    url: fetchedUrl,
-    feed,
-    loading,
-    error,
-  } = useFeed(feedUrl, { debounceMillis: 500 })
+    feedUrl,
+    query: { feed, isLoading },
+    errors: { feed: feedError },
+  } = useAppState()
 
-  useEffect(() => {
-    if (error) {
-      setAppError('feed', toAppError(fetchedUrl, error))
-    }
-  }, [setAppError, fetchedUrl, error])
+  let display: React.ReactNode
+
+  if (isLoading) {
+    display = <Text fw="bold">Loading...</Text>
+  } else if (feedError) {
+    display = <Text fw="bold">{feedError.userFacingMessage}</Text>
+  } else if (feedUrl.trim() === '' || feed?.items == null) {
+    display = <Text fw="bold">No items to show</Text>
+  } else {
+    display = (
+      <Stack>
+        <Box>
+          <Title order={2}>{feed.title}</Title>
+          <Anchor
+            href={feed.link}
+            size="xs"
+            display="flex"
+            style={{ flexDirection: 'row', width: 'fit-content' }}
+          >
+            <Text>{feed.link}</Text>
+            <IconExternalLink size={12} style={{ alignSelf: 'center' }} />
+          </Anchor>
+        </Box>
+        <FeedItemList feedItems={feed.items} />
+      </Stack>
+    )
+  }
 
   return (
     <Container>
-      {loading
-        ? 'loading...'
-        : errors.feed?.userFacingMessage ||
-          (feed == null ? 'No feed yet, enter a URL!' : feed.title)}
+      <Paper>{display}</Paper>
     </Container>
   )
 }
