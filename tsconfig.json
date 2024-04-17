@@ -9,7 +9,7 @@
     "paths": {
       "@mocks/*": ["./src/testing/mocks/*"],
       "@testing/*": ["./src/testing/*"],
-      "@app/*": ["./src/*"],
+      "@app/*": ["./src/*"]
     },
 
     /* Bundler mode */
