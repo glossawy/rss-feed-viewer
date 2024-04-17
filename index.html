@@ -20,7 +20,7 @@
       if (window.localStorage) {
         const colorMode = window.localStorage.getItem('mantine-color-scheme-value')
 
-        if (colorMode != null) {
+        if (colorMode != null && colorMode === 'dark') {
           document.body.classList.add('sunglasses')
           document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('sunglasses')

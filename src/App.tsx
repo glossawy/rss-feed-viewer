@@ -27,7 +27,7 @@ persistQueryClient({ queryClient, persister: queryClientPersister })
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider defaultColorScheme="auto">
+      <MantineProvider>
         <AppStateProvider>
           <Container size="md" pt="sm">
             <ColorSchemeToggle />
