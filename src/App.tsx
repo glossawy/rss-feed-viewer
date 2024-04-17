@@ -47,7 +47,7 @@ function App() {
       <MantineProvider>
         <RequestProxyingProvider proxyUrl={determineProxyUrl()}>
           <AppStateProvider>
-            <Container size="md" pt="sm">
+            <Container size="lg" pt="sm">
               <Affix position={{ right: 20, top: 20 }}>
                 <ProxyingToggle />
                 <ColorSchemeToggle />
