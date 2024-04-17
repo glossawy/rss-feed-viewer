@@ -70,7 +70,7 @@ export default function FeedUrlEntry() {
           value={url}
           onChange={onChange}
           error={urlError?.userFacingMessage}
-          leftSection={<IconRss />}
+          leftSection={<IconRss color="orange" />}
           placeholder="Enter an RSS feed"
         />
       </form>
