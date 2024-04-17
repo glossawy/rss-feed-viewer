@@ -24,15 +24,12 @@ const queryClientPersister = createSyncStoragePersister({
 persistQueryClient({ queryClient, persister: queryClientPersister })
 
 function App() {
-  const searchParams = new URLSearchParams(window.location.search)
-  const initialUrl = searchParams.get('url') || ''
-
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
-        <AppStateProvider initialUrl={initialUrl}>
+        <AppStateProvider>
           <Container size="md" pt="sm">
-            <FeedUrlEntry initialValue={initialUrl} />
+            <FeedUrlEntry />
             <FeedView />
           </Container>
         </AppStateProvider>

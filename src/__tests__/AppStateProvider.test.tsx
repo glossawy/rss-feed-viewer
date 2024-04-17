@@ -204,21 +204,6 @@ describe('AppStateProvider', () => {
   })
 
   describe('url management integration tests', () => {
-    it('does not set the document url when the feed url changes if fetching fails', async () => {
-      renderWithApp(<AppStateConsumer />)
-
-      await page.setFeedUrl(testUrl)
-
-      expect(
-        waitFor(
-          () => {
-            expect(history.pushState).toBeCalled()
-          },
-          { timeout: 100 },
-        ),
-      ).rejects.toThrow()
-    })
-
     it('sets document url when the feed url changes', async () => {
       window.testing.server.use(
         http.get(testUrl, (_req) => HttpResponse.xml(Fixtures.rssXml)),

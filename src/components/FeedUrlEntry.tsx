@@ -17,20 +17,16 @@ function validateUrl(urlValue: string): string | null {
   return null
 }
 
-type Props = {
-  initialValue?: string
-}
-
-export default function FeedUrlEntry({ initialValue }: Props) {
-  const [anyInput, setAnyInput] = useState(false)
-  const [url, setUrl] = useState(initialValue || '')
-
+export default function FeedUrlEntry() {
   const {
     feedUrl,
     errors: { url: urlError },
     setFeedUrl,
     setAppError,
   } = useAppState()
+
+  const [anyInput, setAnyInput] = useState(false)
+  const [url, setUrl] = useState(feedUrl)
 
   useEffect(() => {
     const newError = validateUrl(url)

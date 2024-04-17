@@ -1,10 +1,10 @@
-import { PropsWithChildren, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
 import useFeed, { FeedFetchError } from '@app/hooks/feed'
 import useUrlParam from '@app/hooks/urlParam'
 
-type Props = { initialUrl?: string }
+type Props = { children: React.ReactNode }
 
 function toAppError(error: FeedFetchError): AppError {
   switch (error.failureMode) {
@@ -26,13 +26,11 @@ function toAppError(error: FeedFetchError): AppError {
   }
 }
 
-export default function AppStateProvider({
-  initialUrl,
-  children,
-}: PropsWithChildren<Props>) {
+export default function AppStateProvider({ children }: Props) {
   const { urlParam, setUrlParam } = useUrlParam()
+  const [lastUrlParam, setLastUrlParam] = useState(urlParam)
   const [feedState, setFeedState] = useState<AppState>({
-    feedUrl: initialUrl || '',
+    feedUrl: urlParam,
     query: {
       feed: null,
       isFetched: false,
@@ -50,8 +48,6 @@ export default function AppStateProvider({
     error,
     feed,
   } = useFeed(currentFeedUrl)
-
-  const fetchedUrl = feed?.fetchedUrl
 
   const setAppError = useCallback(
     (name: 'url' | 'feed', message: AppError | null) => {
@@ -97,19 +93,20 @@ export default function AppStateProvider({
     }))
   }, [feed, error, isLoading, isFetched])
 
-  // When URL Param changes, update feed url if they dont match
+  // When URL Param changes, update feed url
   useEffect(() => {
-    if (urlParam === currentFeedUrl) return
-
-    setFeedUrl(urlParam)
+    if (urlParam !== lastUrlParam) {
+      setLastUrlParam(urlParam)
+      setFeedUrl(urlParam)
+    }
   }, [urlParam])
 
-  // When feed changes update URL param if feed loaded
+  /// When feed url changes, update the URL param, dont update to blank url
   useEffect(() => {
-    if (fetchedUrl == null) return
+    if (currentFeedUrl === '') return
 
-    setUrlParam(fetchedUrl)
-  }, [fetchedUrl])
+    setUrlParam(currentFeedUrl)
+  }, [currentFeedUrl])
 
   return (
     <AppStateContext.Provider

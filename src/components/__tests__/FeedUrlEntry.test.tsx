@@ -9,6 +9,7 @@ import {
   AppStateConsumer,
   AppStateConsumerPage,
 } from '@testing/AppStateConsumer'
+import { setDocumentUrl } from '@testing/locationManipulation'
 import renderWithApp from '@testing/renderWithAppState'
 
 class PageObject {
@@ -54,6 +55,18 @@ describe('FeedUrlEntry', () => {
 
     expect(page.inputElement).toHaveProperty('value', '')
     expect(page.errorElement).toBeNull()
+  })
+
+  it('initializes using the feed url from app state', () => {
+    const page = new PageObject()
+    const testUrl = 'https://example.test'
+
+    window.testing.server.use(http.get(testUrl, () => HttpResponse.error()))
+    setDocumentUrl(testUrl)
+
+    renderWithApp(<FeedUrlEntry />)
+
+    expect(page.inputElement).toHaveProperty('value', testUrl)
   })
 
   it('shows an error for empty input after user starts typing', async () => {
