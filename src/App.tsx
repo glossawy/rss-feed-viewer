@@ -1,4 +1,4 @@
-import { Container, MantineProvider } from '@mantine/core'
+import { ColorSchemeScript, Container, MantineProvider } from '@mantine/core'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
@@ -26,7 +26,8 @@ persistQueryClient({ queryClient, persister: queryClientPersister })
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MantineProvider>
+      <ColorSchemeScript defaultColorScheme="auto" />
+      <MantineProvider defaultColorScheme="auto">
         <AppStateProvider>
           <Container size="md" pt="sm">
             <FeedUrlEntry />
