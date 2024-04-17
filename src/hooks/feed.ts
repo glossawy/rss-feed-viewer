@@ -1,3 +1,4 @@
+import { useRequestProxy } from '@app/hooks/requestProxy'
 import { useQuery } from '@tanstack/react-query'
 import Parser from 'rss-parser'
 
@@ -30,12 +31,14 @@ export class FeedFetchError extends Error {
 }
 
 export default function useFeed(url: string) {
+  const { isProxying, getRequestUrl } = useRequestProxy()
+
   const query = useQuery({
-    queryKey: ['feed', url],
-    queryFn: async ({ signal, queryKey: [_feed, queryUrl] }) => {
+    queryKey: ['feed', isProxying, url] as const,
+    queryFn: async ({ signal, queryKey: [_feed, _isProxying, queryUrl] }) => {
       if (url.trim() === '') return null
 
-      const response = await fetch(url, {
+      const response = await fetch(getRequestUrl(queryUrl), {
         signal,
         headers: defaultHeaders,
         mode: 'cors',

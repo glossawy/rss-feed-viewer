@@ -14,8 +14,18 @@ export default function ColorSchemeToggle() {
     setColorScheme(computedScheme === 'light' ? 'dark' : 'light')
   }, [computedScheme, setColorScheme])
 
+  const description =
+    computedScheme === 'light'
+      ? 'Currently in light mode, click to change to dark mode'
+      : 'Currently in dark mode, click to change to light mode'
+
   return (
-    <Button color="gray" variant="subtle" onClick={onToggle}>
+    <Button
+      color="gray"
+      variant="subtle"
+      onClick={onToggle}
+      title={description}
+    >
       {computedScheme === 'light' ? <IconSun /> : <IconMoon />}
     </Button>
   )
