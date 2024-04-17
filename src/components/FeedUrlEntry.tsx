@@ -40,6 +40,7 @@ export default function FeedUrlEntry() {
     [url, error, setFeedUrl],
   )
 
+  // Capture changes that happen outside of this component
   if (lastFeedUrl !== feedUrl) {
     setLastFeedUrl(feedUrl)
     setUrl(feedUrl)

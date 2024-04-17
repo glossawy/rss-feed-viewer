@@ -10,7 +10,7 @@ import {
   simulateNavigateBack,
 } from '@testing/locationManipulation'
 
-describe('useProxyHistory', () => {
+describe('useUrlParam', () => {
   it('without a url param set in the document url, returns an empty value', () => {
     const { result } = renderHook(() => useUrlParam())
 
