@@ -4,10 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/rss.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <title>RSS Feed Viewer</title>
+    <style>
+      body.sunglasses {
+        background-color: #242424;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Mantine can't handle this automatically outside of
+      // SSR applications, this just pulls uses saved preference
+      // to temporarily make the background the right color
+      if (window.localStorage) {
+        const colorMode = window.localStorage.getItem('mantine-color-scheme-value')
+
+        if (colorMode != null) {
+          document.body.classList.add('sunglasses')
+          document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.remove('sunglasses')
+          })
+        }
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
