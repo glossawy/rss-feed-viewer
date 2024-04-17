@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
 function queryParams() {
   return new URL(location.href).searchParams
@@ -22,7 +22,14 @@ class PushStateEvent extends CustomEvent<PushStateEvent> {
 }
 
 export default function useUrlParam() {
-  const [url, setUrl] = useState(currentProxyUrlParam())
+  const url = useSyncExternalStore((callback) => {
+    window.addEventListener('popstate', callback)
+    window.addEventListener('rssviewer:pushstate', callback)
+    return () => {
+      window.removeEventListener('popstate', callback)
+      window.removeEventListener('rssviewer:pushstate', callback)
+    }
+  }, currentProxyUrlParam)
 
   const setUrlParam = useCallback((newUrl: string) => {
     if (currentProxyUrlParam() === newUrl) return
@@ -33,20 +40,6 @@ export default function useUrlParam() {
     // since this would broadcast to other mounted hooks
     window.dispatchEvent(new PushStateEvent())
   }, [])
-
-  useEffect(() => {
-    const listener = () => {
-      const newUrl = currentProxyUrlParam()
-      setUrl(newUrl)
-    }
-
-    window.addEventListener('popstate', listener)
-    window.addEventListener('rssviewer:pushstate', listener)
-    return () => {
-      window.removeEventListener('popstate', listener)
-      window.removeEventListener('rssviewer:pushstate', listener)
-    }
-  }, [setUrl])
 
   return { urlParam: url, setUrlParam }
 }
