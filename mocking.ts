@@ -1,29 +1,21 @@
-import { afterEach, beforeEach, mock } from 'bun:test'
+import { afterAll, beforeEach, mock } from 'bun:test'
+
+import { setupServer } from 'msw/node'
 
 // Allows us to pretend immutable things are mutable ^^
 type Mutable<T> = {
   -readonly [k in keyof T]: T[k]
 }
 
-window.testing = {
-  testUrl: 'https://feed-viewer.test',
-}
-
 // Mock console
 const originalConsole = { ...console }
+const consoleKeys = ['info', 'warn', 'error'] as const
 
-function mockConsole() {
-  ;(['info', 'warn', 'error'] as const).forEach((key) => {
+beforeEach(() => {
+  consoleKeys.forEach((key) => {
     console[key] = mock()
   })
-}
-
-function unmockConsole() {
-  global.console = originalConsole
-}
-
-beforeEach(mockConsole)
-afterEach(unmockConsole)
+})
 
 // VERY minimal mocking of history API, happy-dom does not provide an implementation
 const history = global.history as Mutable<typeof global.history>
@@ -38,3 +30,21 @@ beforeEach(() => {
   location.href = window.testing.testUrl
   pushStateMock.mockClear()
 })
+
+// MSW Global Setup
+
+const server = setupServer()
+
+server.listen({
+  onUnhandledRequest(request) {
+    originalConsole.error('Unhandled %s %s', request.method, request.url)
+  },
+})
+
+beforeEach(() => server.resetHandlers())
+afterAll(() => server.close())
+
+window.testing = {
+  testUrl: 'https://feed-viewer.test',
+  server,
+}

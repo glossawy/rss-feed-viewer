@@ -5,8 +5,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAppState } from '@app/hooks/appState'
 
 function validateUrl(urlValue: string): string | null {
-  if (urlValue.trim() === '') return null
-
   if (!urlValue.startsWith('http://') && !urlValue.startsWith('https://'))
     return 'Must be an http or https URL, e.g., https://example.com'
 
@@ -24,6 +22,7 @@ type Props = {
 }
 
 export default function FeedUrlEntry({ initialValue }: Props) {
+  const [anyInput, setAnyInput] = useState(false)
   const [url, setUrl] = useState(initialValue || '')
 
   const {
@@ -36,15 +35,16 @@ export default function FeedUrlEntry({ initialValue }: Props) {
   useEffect(() => {
     const newError = validateUrl(url)
 
-    setAppError(
-      'url',
-      newError
-        ? {
-            userFacingMessage: newError,
-            internalMessage: newError,
-          }
-        : null,
-    )
+    if (anyInput)
+      setAppError(
+        'url',
+        newError
+          ? {
+              userFacingMessage: newError,
+              internalMessage: newError,
+            }
+          : null,
+      )
   }, [url, setAppError, setFeedUrl])
 
   useEffect(() => {
@@ -53,9 +53,10 @@ export default function FeedUrlEntry({ initialValue }: Props) {
 
   const onChange = useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
+      setAnyInput(true)
       setUrl(evt.target.value)
     },
-    [setUrl],
+    [setAnyInput, setUrl],
   )
 
   const onSubmit = useCallback(

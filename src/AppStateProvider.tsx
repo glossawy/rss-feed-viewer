@@ -30,6 +30,7 @@ export default function AppStateProvider({
   initialUrl,
   children,
 }: PropsWithChildren<Props>) {
+  const { urlParam, setUrlParam } = useUrlParam()
   const [feedState, setFeedState] = useState<AppState>({
     feedUrl: initialUrl || '',
     query: {
@@ -42,41 +43,15 @@ export default function AppStateProvider({
       feed: null,
     },
   })
-
   const { feedUrl: currentFeedUrl } = feedState
+
   const {
     query: { isLoading, isFetched },
     error,
     feed,
   } = useFeed(currentFeedUrl)
 
-  const { urlParam, setUrlParam } = useUrlParam()
-
-  if (urlParam !== feedState.feedUrl && (feedState.feedUrl === '' || isFetched))
-    setUrlParam(feedState.feedUrl)
-
-  useEffect(() => {
-    setFeedState((state) => ({
-      ...state,
-      query: {
-        feed: feed || null,
-        isLoading,
-        isFetched,
-      },
-      errors: {
-        ...state.errors,
-        feed: error && toAppError(error),
-      },
-    }))
-  }, [feed, error, isLoading, isFetched])
-
-  useEffect(() => {
-    if (feed == null) return
-
-    if (urlParam !== currentFeedUrl) {
-      setFeedUrl(urlParam)
-    }
-  }, [feed, urlParam, currentFeedUrl])
+  const fetchedUrl = feed?.fetchedUrl
 
   const setAppError = useCallback(
     (name: 'url' | 'feed', message: AppError | null) => {
@@ -106,6 +81,35 @@ export default function AppStateProvider({
     },
     [clearErrors, setFeedState],
   )
+
+  useEffect(() => {
+    setFeedState((state) => ({
+      ...state,
+      query: {
+        feed: feed || null,
+        isLoading,
+        isFetched,
+      },
+      errors: {
+        ...state.errors,
+        feed: error && toAppError(error),
+      },
+    }))
+  }, [feed, error, isLoading, isFetched])
+
+  // When URL Param changes, update feed url if they dont match
+  useEffect(() => {
+    if (urlParam === currentFeedUrl) return
+
+    setFeedUrl(urlParam)
+  }, [urlParam])
+
+  // When feed changes update URL param if feed loaded
+  useEffect(() => {
+    if (fetchedUrl == null) return
+
+    setUrlParam(fetchedUrl)
+  }, [fetchedUrl])
 
   return (
     <AppStateContext.Provider

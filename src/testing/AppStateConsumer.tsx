@@ -16,6 +16,18 @@ export class AppStateConsumerPage {
     return this.getFieldValue(/^Feed URL:/)
   }
 
+  get fetchedUrl() {
+    return this.getFieldValue(/^Feed Fetched URL:/)
+  }
+
+  get isLoading() {
+    return this.getCheckboxValue(/^Query Is Loading:/)
+  }
+
+  get isFetched() {
+    return this.getCheckboxValue(/^Query Is Fetched:/)
+  }
+
   get errors(): { url: AppError; feed: AppError } {
     return {
       url: {
@@ -68,13 +80,21 @@ export class AppStateConsumerPage {
       .trim()
   }
 
+  private getCheckboxValue(pattern: RegExp) {
+    const checkbox = screen.getByLabelText(pattern)
+
+    if (checkbox instanceof HTMLInputElement) return checkbox.checked
+
+    throw new Error(`${pattern} does not match an input element`)
+  }
+
   private appErrorText(type: string, userFacing: string, internal: string) {
     return [type, userFacing, internal].join(':')
   }
 }
 
 export function AppStateConsumer() {
-  const { feedUrl, errors, setFeedUrl, setAppError, clearErrors } =
+  const { feedUrl, query, errors, setFeedUrl, setAppError, clearErrors } =
     useAppState()
 
   const [feedInput, setFeedInput] = useState('')
@@ -97,6 +117,25 @@ export function AppStateConsumer() {
       <p>Internal URL Error: {errors.url?.internalMessage}</p>
       <p>User Facing Feed Error: {errors.feed?.userFacingMessage}</p>
       <p>Internal Feed Error: {errors.feed?.internalMessage}</p>
+      <p>Feed Fetched URL: {query.feed?.fetchedUrl}</p>
+      <div>
+        <label htmlFor="queryIsLoading">Query Is Loading:</label>
+        <input
+          checked={query.isLoading}
+          type="checkbox"
+          id="queryIsLoading"
+          readOnly
+        />
+      </div>
+      <div>
+        <label htmlFor="queryIsFetched">Query Is Fetched:</label>
+        <input
+          checked={query.isFetched}
+          type="checkbox"
+          id="queryIsFetched"
+          readOnly
+        />
+      </div>
       <div>
         <label htmlFor="feedUrl">Feed URL Input:</label>
         <input

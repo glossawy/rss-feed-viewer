@@ -3,7 +3,7 @@
 import { createContext } from 'react'
 import Parser from 'rss-parser'
 
-export type Feed = Parser.Output<{
+export type Feed = { fetchedUrl: string } & Parser.Output<{
   [key: string]: any
 }>
 

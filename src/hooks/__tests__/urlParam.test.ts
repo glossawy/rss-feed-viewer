@@ -1,20 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 
-import { act, fireEvent, renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 
 import useUrlParam from '@app/hooks/urlParam'
-
-function createDocumentPathname(urlParam: string) {
-  return `/?url=${encodeURIComponent(urlParam)}`
-}
-
-function createDocumentUrl(urlParam: string) {
-  return `${window.testing.testUrl}${createDocumentPathname(urlParam)}`
-}
-
-function setDocumentUrl(urlParam: string) {
-  location.href = createDocumentUrl(urlParam)
-}
+import {
+  createDocumentPathname,
+  createDocumentUrl,
+  setDocumentUrl,
+  simulateNavigateBack,
+} from '@testing/locationManipulation'
 
 describe('useProxyHistory', () => {
   it('without a url param set in the document url, returns an empty value', () => {
@@ -53,10 +47,7 @@ describe('useProxyHistory', () => {
   it('changes the document url and url param value when the back button is pressed', async () => {
     const { result } = renderHook(() => useUrlParam())
 
-    act(() => {
-      setDocumentUrl('test')
-      fireEvent.popState(window)
-    })
+    simulateNavigateBack('test')
 
     await waitFor(() => {
       expect(result.current.urlParam).toEqual('test')

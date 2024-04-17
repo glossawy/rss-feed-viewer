@@ -1,30 +1,15 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, http } from 'msw'
-import { setupServer } from 'msw/node'
 
 import useFeed from '@app/hooks/feed'
 import { Fixtures } from '@mocks/fixtures'
+import { createOneShotSignal } from '@testing/signals'
 
 const testUrl = 'https://example.com/.rss'
 const otherTestUrl = 'https://example.com/other.rss'
-
-type Signal = PromiseLike<void> & { send: () => void }
-function createOneShotSignal(): Signal {
-  let sendSignal
-
-  const signal: Partial<Signal> = new Promise((resolve) => {
-    sendSignal = resolve
-  })
-
-  signal.send = sendSignal
-
-  return signal as Signal
-}
-
-const server = setupServer()
 
 function QueryWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = new QueryClient({
@@ -42,14 +27,10 @@ function QueryWrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('useFeed', () => {
-  beforeAll(() => server.listen())
-  beforeEach(() => server.resetHandlers())
-  afterAll(() => server.close())
-
   it('has no data and is loading until fetch resolves', async () => {
     const respondSignal = createOneShotSignal()
 
-    server.use(
+    window.testing.server.use(
       http.get(testUrl, async () => {
         await respondSignal
         return HttpResponse.xml(Fixtures.rssXml)
@@ -77,7 +58,7 @@ describe('useFeed', () => {
 
   it('aborts pre-existing request when a new one is made', async () => {
     const respondSignal = createOneShotSignal()
-    server.use(
+    window.testing.server.use(
       http.get(testUrl, async () => {
         await respondSignal
         return HttpResponse.text('Test')
@@ -105,7 +86,7 @@ describe('useFeed', () => {
   })
 
   it('returns an error without a parser error if request failed', async () => {
-    server.use(
+    window.testing.server.use(
       http.get(testUrl, () => {
         return new HttpResponse(null, {
           status: 404,
@@ -128,7 +109,7 @@ describe('useFeed', () => {
   })
 
   it('returns an error with a parser error if feed is malformed', async () => {
-    server.use(
+    window.testing.server.use(
       http.get(testUrl, () =>
         HttpResponse.xml('<not-a-valid-feed></not-a-valid-feed>'),
       ),
@@ -149,7 +130,7 @@ describe('useFeed', () => {
   })
 
   it('returns a low-level error when a network error occurs', async () => {
-    server.use(http.get(testUrl, () => HttpResponse.error()))
+    window.testing.server.use(http.get(testUrl, () => HttpResponse.error()))
 
     const { result } = renderHook(() => useFeed(testUrl), {
       wrapper: QueryWrapper,

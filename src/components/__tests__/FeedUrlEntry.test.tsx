@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 
 import { screen, waitFor } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
+import { HttpResponse, http } from 'msw'
 
 import FeedUrlEntry from '@app/components/FeedUrlEntry'
 import {
@@ -21,9 +22,16 @@ class PageObject {
     return screen.getByPlaceholderText('Enter an RSS feed')
   }
 
+  get errorElement() {
+    return (
+      screen.queryByText(/must be/i, { exact: false }) ||
+      screen.queryByText(/invalid/i, { exact: false })
+    )
+  }
+
   async setUrl(url: string) {
     await this.user.clear(this.inputElement)
-    await this.user.type(this.inputElement, url)
+    if (url !== '') await this.user.type(this.inputElement, url)
   }
 
   async submitUrl(url: string) {
@@ -45,9 +53,19 @@ describe('FeedUrlEntry', () => {
     renderWithApp(<FeedUrlEntry />)
 
     expect(page.inputElement).toHaveProperty('value', '')
-    expect(
-      screen.queryByText(/must be/i) || screen.queryByText(/invalid/i),
-    ).toBeNull()
+    expect(page.errorElement).toBeNull()
+  })
+
+  it('shows an error for empty input after user starts typing', async () => {
+    const page = new PageObject()
+
+    renderWithApp(<FeedUrlEntry />)
+
+    await page.setUrl('test')
+    await page.setUrl('')
+
+    expect(page.inputElement).toHaveProperty('value', '')
+    expect(page.errorElement).not.toBeNull()
   })
 
   it('shows an error when a non-url is entered', async () => {
@@ -58,9 +76,8 @@ describe('FeedUrlEntry', () => {
     await page.setUrl('not a valid url')
 
     await waitFor(() => {
-      expect(
-        screen.queryByText('Must be an http or https URL', { exact: false }),
-      ).not.toBeNull()
+      expect(page.errorElement).not.toBeNull()
+      expect(page.errorElement?.textContent).toInclude('http or https')
     })
   })
 
@@ -72,7 +89,8 @@ describe('FeedUrlEntry', () => {
     await page.setUrl('https://not a valid url')
 
     await waitFor(() => {
-      expect(screen.queryByText('Invalid URL', { exact: false })).not.toBeNull()
+      expect(page.errorElement).not.toBeNull()
+      expect(page.errorElement?.textContent).toInclude('Invalid URL')
     })
   })
 
@@ -80,6 +98,8 @@ describe('FeedUrlEntry', () => {
     const page = new PageObject()
     const statePage = new AppStateConsumerPage()
     const testUrl = 'https://example.com/.rss'
+
+    window.testing.server.use(http.get(testUrl, () => HttpResponse.error()))
 
     renderWithApp(
       <>

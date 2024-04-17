@@ -53,7 +53,11 @@ export default function useFeed(url: string) {
       if (response.ok) {
         try {
           const xml = await response.text()
-          const parsed = await new Parser().parseString(xml)
+          const parsed = await new Parser<{ fetchedUrl: string }>().parseString(
+            xml,
+          )
+
+          parsed.fetchedUrl = queryUrl
 
           return parsed
         } catch (err) {
