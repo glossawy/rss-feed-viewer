@@ -1,11 +1,17 @@
+import { env } from 'bun'
 import pino from 'pino'
 
 import createRouter, { Router } from './utils/router'
 
+const allowedOrigin = env.PROXY_ALLOWED_ORIGINS
+
+if (allowedOrigin == null)
+  throw new Error('Server cannot run without PROXY_ALLOWED_ORIGINS set')
+
 function getResponseHeaders() {
   const responseHeaders = new Headers()
   responseHeaders.set('Content-Type', 'application/xml')
-  responseHeaders.set('Access-Control-Allow-Origin', 'localhost')
+  responseHeaders.set('Access-Control-Allow-Origin', allowedOrigin!)
   responseHeaders.set('Vary', 'Origin')
 
   return responseHeaders
