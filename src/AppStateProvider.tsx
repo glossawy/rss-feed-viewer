@@ -2,7 +2,7 @@ import { PropsWithChildren, useCallback, useEffect, useState } from 'react'
 
 import { AppError, AppState, AppStateContext } from '@app/contexts/appState'
 import useFeed, { FeedFetchError } from '@app/hooks/feed'
-import useProxyHistory from '@app/hooks/proxyHistory'
+import useUrlParam from '@app/hooks/urlParam'
 
 type Props = { initialUrl?: string }
 
@@ -50,9 +50,10 @@ export default function AppStateProvider({
     feed,
   } = useFeed(currentFeedUrl)
 
-  const { targetUrl } = useProxyHistory(feedState.feedUrl, {
-    enabled: isFetched || feedState.feedUrl === '',
-  })
+  const { urlParam, setUrlParam } = useUrlParam()
+
+  if (urlParam !== feedState.feedUrl && (feedState.feedUrl === '' || isFetched))
+    setUrlParam(feedState.feedUrl)
 
   useEffect(() => {
     setFeedState((state) => ({
@@ -72,10 +73,10 @@ export default function AppStateProvider({
   useEffect(() => {
     if (feed == null) return
 
-    if (targetUrl.current !== currentFeedUrl) {
-      setFeedUrl(targetUrl.current)
+    if (urlParam !== currentFeedUrl) {
+      setFeedUrl(urlParam)
     }
-  }, [feed, targetUrl, currentFeedUrl])
+  }, [feed, urlParam, currentFeedUrl])
 
   const setAppError = useCallback(
     (name: 'url' | 'feed', message: AppError | null) => {

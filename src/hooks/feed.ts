@@ -32,7 +32,6 @@ export class FeedFetchError extends Error {
 export default function useFeed(url: string) {
   const query = useQuery({
     queryKey: ['feed', url],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     queryFn: async ({ signal, queryKey: [_feed, queryUrl] }) => {
       if (url.trim() === '') return null
 
