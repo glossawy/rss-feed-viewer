@@ -30,7 +30,7 @@ export default function FeedItemList({ feedItems }: Props) {
               <Text>{it.contentSnippet}</Text>
             </Card.Section>
             <Card.Section>
-              <Button component="a" href={it.link}>
+              <Button variant="subtle" component="a" href={it.link}>
                 Read More
               </Button>
             </Card.Section>
