@@ -1,6 +1,7 @@
-import { useRequestProxy } from '@app/hooks/requestProxy'
 import { useQuery } from '@tanstack/react-query'
 import Parser from 'rss-parser'
+
+import { useRequestProxy } from '@app/hooks/requestProxy'
 
 const MIME_TYPE_WEIGHTS: [string, number][] = [
   ['application/rss+xml', 1.0],
