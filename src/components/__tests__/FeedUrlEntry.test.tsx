@@ -129,25 +129,4 @@ describe('FeedUrlEntry', () => {
       expect(statePage.feedUrl).toEqual(testUrl)
     })
   })
-
-  it('updates the app error state when entered URL is invalid', async () => {
-    const page = new PageObject()
-    const statePage = new AppStateConsumerPage()
-
-    renderWithApp(
-      <>
-        <FeedUrlEntry />
-        <AppStateConsumer />
-      </>,
-    )
-
-    await page.setUrl('not a valid url')
-
-    await waitFor(() => {
-      expect(statePage.errors.url.internalMessage).toMatch(/^Must be an http/i)
-      expect(statePage.errors.url.userFacingMessage).toMatch(
-        /^Must be an http/i,
-      )
-    })
-  })
 })

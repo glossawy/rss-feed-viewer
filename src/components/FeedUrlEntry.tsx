@@ -1,6 +1,6 @@
 import { Container, TextInput } from '@mantine/core'
 import { IconRss } from '@tabler/icons-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { useAppState } from '@app/hooks/appState'
 
@@ -18,50 +18,32 @@ function validateUrl(urlValue: string): string | null {
 }
 
 export default function FeedUrlEntry() {
-  const {
-    feedUrl,
-    errors: { url: urlError },
-    setFeedUrl,
-    setAppError,
-  } = useAppState()
+  const { feedUrl, setFeedUrl } = useAppState()
+  const [lastFeedUrl, setLastFeedUrl] = useState(feedUrl)
 
-  const [anyInput, setAnyInput] = useState(false)
   const [url, setUrl] = useState(feedUrl)
-
-  useEffect(() => {
-    const newError = validateUrl(url)
-
-    if (anyInput)
-      setAppError(
-        'url',
-        newError
-          ? {
-              userFacingMessage: newError,
-              internalMessage: newError,
-            }
-          : null,
-      )
-  }, [url, setAppError, setFeedUrl])
-
-  useEffect(() => {
-    if (url !== feedUrl) setUrl(feedUrl)
-  }, [feedUrl])
+  const [error, setError] = useState<string | null>(null)
 
   const onChange = useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
-      setAnyInput(true)
       setUrl(evt.target.value)
+      setError(validateUrl(evt.target.value))
     },
-    [setAnyInput, setUrl],
+    [setUrl],
   )
 
   const onSubmit = useCallback(
     (evt: React.FormEvent<HTMLFormElement>) => {
       evt.preventDefault()
-      if (!urlError) setFeedUrl(url)
+      if (!error) setFeedUrl(url)
     },
-    [url, urlError, setFeedUrl],
+    [url, error, setFeedUrl],
   )
+
+  if (lastFeedUrl !== feedUrl) {
+    setLastFeedUrl(feedUrl)
+    setUrl(feedUrl)
+  }
 
   return (
     <Container fluid p="sm">
@@ -69,7 +51,7 @@ export default function FeedUrlEntry() {
         <TextInput
           value={url}
           onChange={onChange}
-          error={urlError?.userFacingMessage}
+          error={error}
           leftSection={<IconRss color="orange" />}
           placeholder="Enter an RSS feed"
         />

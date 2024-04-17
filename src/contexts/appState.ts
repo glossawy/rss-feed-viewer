@@ -20,18 +20,12 @@ export type Query = {
 export type AppState = {
   feedUrl: string
   errors: {
-    url: AppError | null
     feed: AppError | null
   }
 }
 
 export type AppStateOps = {
   setFeedUrl: (url: string) => void
-  setAppError: (
-    field: keyof AppState['errors'],
-    message: AppError | null,
-  ) => void
-  clearErrors: () => void
 }
 
 const warnNotSet = (actionDesc: string) => () => {
@@ -42,8 +36,6 @@ export const AppStateContext = createContext<AppState & Query & AppStateOps>({
   feedUrl: '',
   feed: null,
   isLoading: false,
-  errors: { url: null, feed: null },
+  errors: { feed: null },
   setFeedUrl: warnNotSet('change feed url'),
-  setAppError: warnNotSet('set error'),
-  clearErrors: warnNotSet('clear errors'),
 })
