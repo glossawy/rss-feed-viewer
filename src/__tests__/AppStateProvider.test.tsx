@@ -117,7 +117,6 @@ describe('AppStateProvider', () => {
 
       await waitFor(() => {
         expect(page.isLoading).toBeTrue()
-        expect(page.isFetched).toBeFalse()
         expect(page.fetchedUrl).toBeEmpty()
       })
     })
@@ -143,7 +142,6 @@ describe('AppStateProvider', () => {
 
       await waitFor(() => {
         expect(page.isLoading).toBeFalse()
-        expect(page.isFetched).toBeTrue()
         expect(page.fetchedUrl).toEqual(testUrl)
       })
     })
@@ -171,7 +169,6 @@ describe('AppStateProvider', () => {
 
       await waitFor(() => {
         expect(page.isLoading).toBeFalse()
-        expect(page.isFetched).toBeTrue()
         expect(page.fetchedUrl).toBeEmpty()
 
         expect(page.errors.feed.userFacingMessage).not.toBeEmpty()

@@ -24,18 +24,15 @@ class PushStateEvent extends CustomEvent<PushStateEvent> {
 export default function useUrlParam() {
   const [url, setUrl] = useState(currentProxyUrlParam())
 
-  const setUrlParam = useCallback(
-    (newUrl: string) => {
-      if (url === newUrl) return
+  const setUrlParam = useCallback((newUrl: string) => {
+    if (currentProxyUrlParam() === newUrl) return
 
-      history.pushState({}, '', nextStateUrl(newUrl))
+    history.pushState({}, '', nextStateUrl(newUrl))
 
-      // We dispatch an event instead of setting directly
-      // since this would broadcast to other mounted hooks
-      window.dispatchEvent(new PushStateEvent())
-    },
-    [url],
-  )
+    // We dispatch an event instead of setting directly
+    // since this would broadcast to other mounted hooks
+    window.dispatchEvent(new PushStateEvent())
+  }, [])
 
   useEffect(() => {
     const listener = () => {

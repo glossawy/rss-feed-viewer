@@ -15,7 +15,8 @@ import { useAppState } from '@app/hooks/appState'
 export default function FeedView() {
   const {
     feedUrl,
-    query: { feed, isLoading },
+    feed,
+    isLoading,
     errors: { feed: feedError },
   } = useAppState()
 

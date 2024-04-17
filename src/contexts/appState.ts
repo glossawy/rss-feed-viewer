@@ -15,12 +15,10 @@ export type AppError = {
 export type Query = {
   feed: Feed | null
   isLoading: boolean
-  isFetched: boolean
 }
 
 export type AppState = {
   feedUrl: string
-  query: Query
   errors: {
     url: AppError | null
     feed: AppError | null
@@ -40,13 +38,10 @@ const warnNotSet = (actionDesc: string) => () => {
   console.warn(`Attempted to ${actionDesc} without a context being set`)
 }
 
-export const AppStateContext = createContext<AppState & AppStateOps>({
+export const AppStateContext = createContext<AppState & Query & AppStateOps>({
   feedUrl: '',
-  query: {
-    feed: null,
-    isLoading: false,
-    isFetched: false,
-  },
+  feed: null,
+  isLoading: false,
   errors: { url: null, feed: null },
   setFeedUrl: warnNotSet('change feed url'),
   setAppError: warnNotSet('set error'),
