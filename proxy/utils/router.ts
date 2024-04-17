@@ -1,6 +1,6 @@
 import pino from 'pino'
 
-import generateHexId from './generateRequestId'
+import generateHexId from './generateHexId'
 import promisify from './promisify'
 
 type RouteHandler = (

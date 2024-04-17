@@ -72,7 +72,7 @@ export default function AppStateProvider({
   useEffect(() => {
     if (feed == null) return
 
-    if (targetUrl.current != null && targetUrl.current !== currentFeedUrl) {
+    if (targetUrl.current !== currentFeedUrl) {
       setFeedUrl(targetUrl.current)
     }
   }, [feed, targetUrl, currentFeedUrl])

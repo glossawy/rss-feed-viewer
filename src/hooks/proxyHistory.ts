@@ -19,22 +19,21 @@ export default function useProxyHistory(
   url: string,
   { enabled }: { enabled: boolean } = { enabled: true },
 ) {
-  const targetUrl = useRef<string | null>()
+  const targetUrl = useRef<string>(url)
 
   // If URL changes via an app action, set it to the target url.
   // Update param in URL
-  useEffect(() => {
-    if (!enabled) return
-
+  if (enabled && targetUrl.current !== url) {
     targetUrl.current = url
+
     if (currentProxyUrlParam() !== url) {
       history.pushState({}, '', nextStateUrl(url))
     }
-  }, [url, enabled])
+  }
 
   useEffect(() => {
     const listener = () => {
-      const newUrl = new URL(window.location.href).searchParams.get('url') || ''
+      const newUrl = currentProxyUrlParam()
       targetUrl.current = newUrl
     }
 
@@ -44,5 +43,5 @@ export default function useProxyHistory(
     }
   }, [])
 
-  return { targetUrl }
+  return { targetUrl: targetUrl }
 }
