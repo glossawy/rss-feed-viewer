@@ -1,4 +1,4 @@
-import { Container, MantineProvider } from '@mantine/core'
+import { Affix, Container, MantineProvider } from '@mantine/core'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
@@ -30,7 +30,9 @@ function App() {
       <MantineProvider>
         <AppStateProvider>
           <Container size="md" pt="sm">
-            <ColorSchemeToggle />
+            <Affix position={{ right: 20, top: 20 }}>
+              <ColorSchemeToggle />
+            </Affix>
             <FeedUrlEntry />
             <FeedView />
           </Container>

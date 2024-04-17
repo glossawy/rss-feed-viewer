@@ -1,5 +1,4 @@
 import {
-  Affix,
   Button,
   useComputedColorScheme,
   useMantineColorScheme,
@@ -16,10 +15,8 @@ export default function ColorSchemeToggle() {
   }, [computedScheme, setColorScheme])
 
   return (
-    <Affix position={{ top: 20, right: 20 }}>
-      <Button color="gray" variant="subtle" onClick={onToggle}>
-        {computedScheme === 'light' ? <IconSun /> : <IconMoon />}
-      </Button>
-    </Affix>
+    <Button color="gray" variant="subtle" onClick={onToggle}>
+      {computedScheme === 'light' ? <IconSun /> : <IconMoon />}
+    </Button>
   )
 }
