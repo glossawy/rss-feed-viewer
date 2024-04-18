@@ -1,3 +1,4 @@
+import { useDocumentTitle } from '@mantine/hooks'
 import { useCallback } from 'react'
 
 import { AppError, AppStateContext } from '@app/contexts/appState'
@@ -36,6 +37,8 @@ export default function AppStateProvider({ children }: Props) {
     error,
     feed,
   } = useFeed(urlParam)
+
+  useDocumentTitle(feed?.title || 'RSS Feed Viewer')
 
   const setFeedUrl = useCallback(
     (feedUrl: string) => {

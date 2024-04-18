@@ -33,7 +33,7 @@ export default function Feed({ feed }: Props) {
   return (
     <Stack>
       <Box>
-        <Group gap={0}>
+        <Group gap={0} id="topOfFeed">
           <Title order={2}>{feed.title}</Title>
           <Anchor href={source} size="xs" style={{ alignSelf: 'flex-start' }}>
             (source)
@@ -52,13 +52,25 @@ export default function Feed({ feed }: Props) {
           <Text size="sm">{feed.description}</Text>
         </Spoiler>
       </Box>
-      <List spacing="md">
+      <List spacing="md" styles={{ item: { listStyleType: 'none ' } }}>
         {feed.items.map((it) => (
-          <List.Item key={itemKey(it)} style={{ listStyleType: 'none' }}>
+          <List.Item key={itemKey(it)}>
             <FeedEntry feed={feed} item={it} />
           </List.Item>
         ))}
       </List>
+      <Stack
+        justify="center"
+        pt="sm"
+        pb="md"
+        gap={0}
+        style={{ alignItems: 'center' }}
+      >
+        <Title order={3}>End of Feed</Title>
+        <Anchor href="#topOfFeed" size="sm">
+          Return to Top
+        </Anchor>
+      </Stack>
     </Stack>
   )
 }

@@ -35,6 +35,12 @@ describe('AppStateProvider', () => {
     })
   })
 
+  it('sets the document title initially to the default', () => {
+    renderWithApp(<AppStateConsumer />)
+
+    expect(document.title).toEqual('RSS Feed Viewer')
+  })
+
   it('provides a way to set the feed url', async () => {
     renderWithApp(<AppStateConsumer />)
 
@@ -61,7 +67,7 @@ describe('AppStateProvider', () => {
       })
     })
 
-    it('updates the query state with feed data when fetch completes', async () => {
+    it('updates the query state and document title with feed data when fetch completes', async () => {
       const signal = createOneShotSignal()
       window.testing.server.use(
         http.get(testUrl, async (_req) => {
@@ -83,6 +89,7 @@ describe('AppStateProvider', () => {
       await waitFor(() => {
         expect(page.isLoading).toBeFalse()
         expect(page.fetchedUrl).toEqual(testUrl)
+        expect(document.title).toMatch('NASA Space Station News')
       })
     })
 
