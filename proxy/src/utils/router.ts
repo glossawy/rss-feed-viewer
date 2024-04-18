@@ -1,11 +1,11 @@
 import { Server } from 'bun'
-import pino from 'pino'
+import { Logger, pino } from 'pino'
 
-import generateHexId from './generateHexId'
-import promisify from './promisify'
+import generateHexId from '~proxy/utils/generateHexId.ts'
+import promisify from '~proxy/utils/promisify.ts'
 
 type RouteHandler = (
-  req: Request & { logger: pino.Logger<never> },
+  req: Request & { logger: Logger<never> },
   params: Params,
 ) => Response | Promise<Response>
 
@@ -33,7 +33,7 @@ export class Router {
   root: string
   routes: Route[]
   fallbackHandler: RouteHandler | null
-  requestLogger: pino.Logger<never>
+  requestLogger: Logger<never>
 
   constructor(root: string) {
     this.root = root
@@ -42,7 +42,7 @@ export class Router {
     this.requestLogger = pino()
   }
 
-  set logger(logger: pino.Logger<never>) {
+  set logger(logger: Logger<never>) {
     this.requestLogger = logger
   }
 

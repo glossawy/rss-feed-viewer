@@ -1,7 +1,7 @@
 import { env } from 'bun'
 import pino from 'pino'
 
-import createRouter, { Router } from './utils/router'
+import createRouter, { Router } from '~proxy/utils/router.js'
 
 const allowedOrigin = env.PROXY_ALLOWED_ORIGINS
 

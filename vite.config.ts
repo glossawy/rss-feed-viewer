@@ -6,6 +6,11 @@ import { defineConfig } from 'vite'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  server: {
+    watch: {
+      ignored: ['node_modules/**', '.git/**', 'proxy/**'],
+    },
+  },
   resolve: {
     alias: [
       {

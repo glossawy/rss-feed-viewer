@@ -1,6 +1,6 @@
-import pino from 'pino'
+import { pino } from 'pino'
 
-import compileRouter from './routes'
+import compileRouter from './routes.js'
 
 const rootLogger = pino({
   name: 'proxy',
