@@ -40,7 +40,7 @@ export default function Feed({ feed }: Props) {
           </Anchor>
         </Group>
         <Anchor
-          href={feed.link}
+          href={origin}
           size="xs"
           display="flex"
           style={{ flexDirection: 'row', width: 'fit-content' }}

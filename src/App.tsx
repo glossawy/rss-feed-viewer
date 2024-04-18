@@ -1,10 +1,12 @@
-import { Affix, Container, MantineProvider } from '@mantine/core'
+import { Affix, Container, MantineProvider, Stack } from '@mantine/core'
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { persistQueryClient } from '@tanstack/react-query-persist-client'
 
 import AppStateProvider from '@app/AppStateProvider'
+import AppTogglesProvider from '@app/AppTogglesProvider'
 import ColorSchemeToggle from '@app/components/ColorSchemeToggle'
+import ContentLoadingToggle from '@app/components/ContentLoadingToggle'
 import FeedUrlEntry from '@app/components/FeedUrlEntry'
 import FeedView from '@app/components/FeedView'
 import ProxyingToggle from '@app/components/ProxyingToggle'
@@ -45,18 +47,23 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MantineProvider>
-        <RequestProxyingProvider proxyUrl={determineProxyUrl()}>
-          <AppStateProvider>
-            <Container size="lg" pt="sm">
-              <Affix position={{ right: 20, top: 20 }}>
-                <ProxyingToggle />
-                <ColorSchemeToggle />
-              </Affix>
-              <FeedUrlEntry />
-              <FeedView />
-            </Container>
-          </AppStateProvider>
-        </RequestProxyingProvider>
+        <AppTogglesProvider>
+          <RequestProxyingProvider proxyUrl={determineProxyUrl()}>
+            <AppStateProvider>
+              <Container size="lg" pt="sm" py="sm">
+                <Affix position={{ right: 20, top: 20 }}>
+                  <Stack>
+                    <ColorSchemeToggle />
+                    <ProxyingToggle />
+                    <ContentLoadingToggle />
+                  </Stack>
+                </Affix>
+                <FeedUrlEntry />
+                <FeedView />
+              </Container>
+            </AppStateProvider>
+          </RequestProxyingProvider>
+        </AppTogglesProvider>
       </MantineProvider>
     </QueryClientProvider>
   )

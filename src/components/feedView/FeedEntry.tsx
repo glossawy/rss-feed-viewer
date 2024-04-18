@@ -12,6 +12,7 @@ import { IconExternalLink } from '@tabler/icons-react'
 import Parser from 'rss-parser'
 
 import type { Feed } from '@app/contexts/appState'
+import { useAppToggles } from '@app/hooks/appToggles'
 
 type Props = {
   feed: Feed
@@ -19,6 +20,9 @@ type Props = {
 }
 
 export default function FeedEntry({ item }: Props) {
+  const { toggles } = useAppToggles()
+  const showFullContent = toggles['use-item-content']
+
   return (
     <Card
       withBorder
@@ -50,8 +54,20 @@ export default function FeedEntry({ item }: Props) {
       </Card.Section>
       <Divider variant="dashed" />
       <Card.Section>
-        <Spoiler maxHeight={200} showLabel="Show more" hideLabel="Show less">
-          {item.contentSnippet}
+        <Spoiler
+          maxHeight={showFullContent ? 500 : 200}
+          showLabel="Show more"
+          hideLabel="Show less"
+        >
+          {showFullContent ? (
+            <Text
+              dangerouslySetInnerHTML={{
+                __html: item.content || item.contentSnippet || '',
+              }}
+            />
+          ) : (
+            <Text>{item.contentSnippet}</Text>
+          )}
         </Spoiler>
       </Card.Section>
     </Card>

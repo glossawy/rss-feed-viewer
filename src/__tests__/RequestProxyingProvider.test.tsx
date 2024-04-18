@@ -1,22 +1,23 @@
-import { beforeEach, describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
 import { act, renderHook, waitFor } from '@testing-library/react'
 
+import AppTogglesProvider from '@app/AppTogglesProvider'
 import { useRequestProxy } from '@app/hooks/requestProxy'
 import RequestProxyingProvider from '@app/RequestProxyingProvider'
-import { LocalStorageKeys } from '@app/utils/localStorageKeys'
+import setStoredToggle from '@testing/toggles'
 
 function TestProxyingProvider({ children }: { children: React.ReactNode }) {
   return (
-    <RequestProxyingProvider proxyUrl={new URL(window.testing.testUrl)}>
-      {children}
-    </RequestProxyingProvider>
+    <AppTogglesProvider>
+      <RequestProxyingProvider proxyUrl={new URL(window.testing.testUrl)}>
+        {children}
+      </RequestProxyingProvider>
+    </AppTogglesProvider>
   )
 }
 
 describe('RequestProxyingProvider', () => {
-  beforeEach(() => localStorage.clear())
-
   it('is not proxying by default', () => {
     const { result } = renderHook(() => useRequestProxy(), {
       wrapper: TestProxyingProvider,
@@ -26,7 +27,8 @@ describe('RequestProxyingProvider', () => {
   })
 
   it('uses the setting saved in localStorage if set', () => {
-    localStorage.setItem(LocalStorageKeys.isProxying, 'true')
+    setStoredToggle('proxy', true)
+
     const { result } = renderHook(() => useRequestProxy(), {
       wrapper: TestProxyingProvider,
     })
@@ -35,7 +37,8 @@ describe('RequestProxyingProvider', () => {
   })
 
   it('updates localStorage when setting changes', async () => {
-    localStorage.setItem(LocalStorageKeys.isProxying, 'true')
+    setStoredToggle('proxy', true)
+
     const { result } = renderHook(() => useRequestProxy(), {
       wrapper: TestProxyingProvider,
     })
@@ -50,7 +53,8 @@ describe('RequestProxyingProvider', () => {
   })
 
   it('returns unmodified urls when not proxying', () => {
-    localStorage.setItem(LocalStorageKeys.isProxying, 'false')
+    setStoredToggle('proxy', false)
+
     const { result } = renderHook(() => useRequestProxy(), {
       wrapper: TestProxyingProvider,
     })
@@ -60,7 +64,8 @@ describe('RequestProxyingProvider', () => {
   })
 
   it('returns modified urls when proxying', () => {
-    localStorage.setItem(LocalStorageKeys.isProxying, 'true')
+    setStoredToggle('proxy', true)
+
     const { result } = renderHook(() => useRequestProxy(), {
       wrapper: TestProxyingProvider,
     })

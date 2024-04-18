@@ -1,20 +1,20 @@
-import { useLocalStorage } from '@mantine/hooks'
 import { useCallback } from 'react'
 
 import { RequestProxyContext } from '@app/contexts/requestProxy'
-import { LocalStorageKeys } from '@app/utils/localStorageKeys'
+import { useAppToggles } from '@app/hooks/appToggles'
 
 type Props = { proxyUrl: URL; children: React.ReactNode }
 
 export default function RequestProxyingProvider({ proxyUrl, children }: Props) {
-  const [isProxying, setIsProxying] = useLocalStorage({
-    key: LocalStorageKeys.isProxying,
-    defaultValue: false,
-    deserialize(value) {
-      if (value) return JSON.parse(value)
-      else return false
+  const { toggles, setToggle } = useAppToggles()
+  const isProxying = toggles.proxy
+
+  const setUseProxy = useCallback(
+    (enabled: boolean) => {
+      setToggle('proxy', enabled)
     },
-  })
+    [setToggle],
+  )
 
   const getRequestUrl = useCallback(
     (url: string) => {
@@ -33,7 +33,7 @@ export default function RequestProxyingProvider({ proxyUrl, children }: Props) {
 
   return (
     <RequestProxyContext.Provider
-      value={{ isProxying, getRequestUrl, setUseProxy: setIsProxying }}
+      value={{ isProxying, getRequestUrl, setUseProxy }}
     >
       {children}
     </RequestProxyContext.Provider>

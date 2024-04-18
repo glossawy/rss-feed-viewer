@@ -4,7 +4,9 @@ import { AppError, AppStateContext } from '@app/contexts/appState'
 import useFeed, { FeedFetchError } from '@app/hooks/feed'
 import useUrlParam from '@app/hooks/urlParam'
 
-type Props = { children: React.ReactNode }
+type Props = {
+  children: React.ReactNode
+}
 
 function toAppError(error: FeedFetchError): AppError {
   switch (error.failureMode) {

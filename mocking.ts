@@ -48,3 +48,7 @@ window.testing = {
   testUrl: 'https://feed-viewer.test',
   server,
 }
+
+// Local Storage setup
+
+beforeEach(() => localStorage.clear())

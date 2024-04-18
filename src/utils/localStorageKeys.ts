@@ -1,4 +1,4 @@
 export const LocalStorageKeys = {
   mantineColorScheme: 'mantine-color-scheme-value',
-  isProxying: 'rssviewer:is-proxying',
+  toggles: 'rssviewer:toggles',
 } as const
