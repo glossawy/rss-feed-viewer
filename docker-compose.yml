@@ -1,0 +1,34 @@
+---
+services:
+  proxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: proxy
+    restart: unless-stopped
+    environment:
+      - PROXY_PORT=3000
+      - PROXY_ALLOWED_ORIGINS=localhost:*
+    networks:
+      - dev
+    volumes:
+      - ./proxy:/app
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: viewer
+    restart: unless-stopped
+    environment:
+      - API_HOST=proxy
+      - API_PORT=3000
+    ports:
+      - 3000:80
+    networks:
+      - dev
+    volumes:
+      - ./caddyfiles/Caddyfile.dev:/etc/caddy/Caddyfile
+
+networks:
+  dev:

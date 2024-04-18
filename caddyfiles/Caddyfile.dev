@@ -1,0 +1,11 @@
+{
+	debug
+}
+
+:80 {
+	reverse_proxy /proxy {$API_HOST}:{$API_PORT}
+	root * /var/www/app/html
+
+	encode gzip
+	file_server
+}

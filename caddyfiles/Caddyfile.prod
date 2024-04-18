@@ -1,0 +1,13 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	root * /var/www/app/html
+	reverse_proxy /proxy {$API_HOST}:{$API_PORT}
+
+	encode gzip
+	file_server
+}
