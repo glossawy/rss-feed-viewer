@@ -1,3 +1,4 @@
+import { Server } from 'bun'
 import pino from 'pino'
 
 import generateHexId from './generateHexId'
@@ -17,7 +18,16 @@ type Params = {
   get: (key: string) => string | null
 }
 
-type CompiledRouter = (req: Request) => Promise<Response>
+type CompiledRouter = (req: Request, server: Server) => Promise<Response>
+
+function getClientIp(req: Request, server: Server): string | null {
+  return (
+    req.headers.get('X-Forwarded-For') ||
+    req.headers.get('X-Real-IP') ||
+    server.requestIP(req)?.address ||
+    null
+  )
+}
 
 export class Router {
   root: string
@@ -44,13 +54,15 @@ export class Router {
   }
 
   compile(): CompiledRouter {
-    return async (rawRequest: Request) => {
+    return async (rawRequest: Request, server: Server) => {
       const url = new URL(rawRequest.url)
       const path = url.pathname
+      const clientIp = getClientIp(rawRequest, server)
 
       const route = this.absoluteRoutes.find((r) => r.path === path)
       const logger = this.requestLogger.child({
         requestId: generateHexId(),
+        clientIp,
         path,
         params: Object.fromEntries(url.searchParams.entries()),
       })
