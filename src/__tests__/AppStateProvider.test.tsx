@@ -1,22 +1,22 @@
 import { beforeEach, describe, expect, it } from 'bun:test'
 
-import { waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { HttpResponse, delay, http } from 'msw'
 
+import { useAppState } from '@app/hooks/appState'
 import { Fixtures } from '@mocks/fixtures'
-import {
-  AppStateConsumer,
-  AppStateConsumerPage,
-} from '@testing/AppStateConsumer'
 import {
   createDocumentUrl,
   simulateNavigateBack,
 } from '@testing/locationManipulation'
-import renderWithApp from '@testing/renderWithAppState'
+import { AppWrapper } from '@testing/renderWithAppState'
 import { createOneShotSignal } from '@testing/signals'
 
-const page = new AppStateConsumerPage()
 const testUrl = 'https://example.com'
+
+function renderAppState() {
+  return renderHook(() => useAppState(), { wrapper: AppWrapper })
+}
 
 describe('AppStateProvider', () => {
   beforeEach(() => {
@@ -24,29 +24,29 @@ describe('AppStateProvider', () => {
   })
 
   it('has sane defaults', () => {
-    renderWithApp(<AppStateConsumer />)
+    const { result } = renderAppState()
 
-    expect(page.feedUrl).toBeEmpty()
-    expect(page.fetchedUrl).toBeEmpty()
-    expect(page.isLoading).toBeFalse()
-    expect(page.errors.feed).toMatchObject({
-      userFacingMessage: '',
-      internalMessage: '',
-    })
+    expect(result.current.feedUrl).toBeEmpty()
+    expect(result.current.feed).toBeNull()
+    expect(result.current.errors).toMatchObject({ feed: null })
   })
 
   it('sets the document title initially to the default', () => {
-    renderWithApp(<AppStateConsumer />)
+    renderAppState()
 
     expect(document.title).toEqual('RSS Feed Viewer')
   })
 
   it('provides a way to set the feed url', async () => {
-    renderWithApp(<AppStateConsumer />)
+    const { result } = renderAppState()
 
-    await page.setFeedUrl('https://example.com')
+    act(() => {
+      result.current.setFeedUrl(testUrl)
+    })
 
-    expect(page.feedUrl).toEqual('https://example.com')
+    await waitFor(() => {
+      expect(result.current.feedUrl).toEqual(testUrl)
+    })
   })
 
   describe('feed fetch integration tests', () => {
@@ -57,13 +57,15 @@ describe('AppStateProvider', () => {
         }),
       )
 
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
-      await page.setFeedUrl(testUrl)
+      act(() => {
+        result.current.setFeedUrl(testUrl)
+      })
 
       await waitFor(() => {
-        expect(page.isLoading).toBeTrue()
-        expect(page.fetchedUrl).toBeEmpty()
+        expect(result.current.isLoading).toBeTrue()
+        expect(result.current.feed).toBeNull()
       })
     })
 
@@ -76,19 +78,21 @@ describe('AppStateProvider', () => {
         }),
       )
 
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
-      await page.setFeedUrl(testUrl)
+      act(() => {
+        result.current.setFeedUrl(testUrl)
+      })
 
       await waitFor(() => {
-        expect(page.isLoading).toBeTrue()
+        expect(result.current.isLoading).toBeTrue()
       })
 
       signal.send()
 
       await waitFor(() => {
-        expect(page.isLoading).toBeFalse()
-        expect(page.fetchedUrl).toEqual(testUrl)
+        expect(result.current.isLoading).toBeFalse()
+        expect(result.current.feed?.fetchedUrl).toEqual(testUrl)
         expect(document.title).toMatch('NASA Space Station News')
       })
     })
@@ -102,24 +106,24 @@ describe('AppStateProvider', () => {
         }),
       )
 
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
-      await page.setFeedUrl(testUrl)
+      act(() => {
+        result.current.setFeedUrl(testUrl)
+      })
 
       await waitFor(() => {
-        expect(page.isLoading).toBeTrue()
-        expect(page.errors.feed.userFacingMessage).toBeEmpty()
-        expect(page.errors.feed.internalMessage).toBeEmpty()
+        expect(result.current.isLoading).toBeTrue()
+        expect(result.current.errors.feed).toBeNull()
       })
 
       signal.send()
 
       await waitFor(() => {
-        expect(page.isLoading).toBeFalse()
-        expect(page.fetchedUrl).toBeEmpty()
+        expect(result.current.isLoading).toBeFalse()
+        expect(result.current.feed).toBeNull()
 
-        expect(page.errors.feed.userFacingMessage).not.toBeEmpty()
-        expect(page.errors.feed.internalMessage).not.toBeEmpty()
+        expect(result.current.errors.feed).not.toBeNull()
       })
     })
 
@@ -130,19 +134,19 @@ describe('AppStateProvider', () => {
         http.get(secondUrl, async (_req) => HttpResponse.error()),
       )
 
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
-      await page.setFeedUrl(testUrl)
+      act(() => result.current.setFeedUrl(testUrl))
       await waitFor(() => {
-        expect(page.fetchedUrl).toEqual(testUrl)
-        expect(page.errors.feed.internalMessage).toBeEmpty()
+        expect(result.current.feed?.fetchedUrl).toEqual(testUrl)
+        expect(result.current.errors.feed).toBeNull()
       })
 
-      await page.setFeedUrl(secondUrl)
+      act(() => result.current.setFeedUrl(secondUrl))
       await waitFor(() => {
-        expect(page.feedUrl).toEqual(secondUrl)
-        expect(page.errors.feed.internalMessage).not.toBeEmpty()
-        expect(page.fetchedUrl).toBeEmpty()
+        expect(result.current.feedUrl).toEqual(secondUrl)
+        expect(result.current.errors.feed).not.toBeNull()
+        expect(result.current.feed).toBeNull()
       })
     })
   })
@@ -153,9 +157,9 @@ describe('AppStateProvider', () => {
         http.get(testUrl, (_req) => HttpResponse.xml(Fixtures.rssXml)),
       )
 
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
-      await page.setFeedUrl(testUrl)
+      act(() => result.current.setFeedUrl(testUrl))
 
       waitFor(() => {
         expect(location.href).toEqual(createDocumentUrl(testUrl))
@@ -163,12 +167,12 @@ describe('AppStateProvider', () => {
     })
 
     it('changes the feed url when user navigates back', async () => {
-      renderWithApp(<AppStateConsumer />)
+      const { result } = renderAppState()
 
       simulateNavigateBack(testUrl)
 
       await waitFor(() => {
-        expect(page.feedUrl).toEqual(testUrl)
+        expect(result.current.feedUrl).toEqual(testUrl)
       })
     })
   })

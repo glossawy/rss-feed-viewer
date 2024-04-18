@@ -1,16 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 
-import { screen, waitFor } from '@testing-library/react'
+import { renderHook, screen, waitFor } from '@testing-library/react'
 import userEvent, { UserEvent } from '@testing-library/user-event'
 import { HttpResponse, http } from 'msw'
 
 import FeedUrlEntry from '@app/components/FeedUrlEntry'
-import {
-  AppStateConsumer,
-  AppStateConsumerPage,
-} from '@testing/AppStateConsumer'
+import { useAppState } from '@app/hooks/appState'
 import { setDocumentUrl } from '@testing/locationManipulation'
-import renderWithApp from '@testing/renderWithAppState'
+import { AppWrapper } from '@testing/renderWithAppState'
 
 class PageObject {
   user: UserEvent
@@ -47,11 +44,24 @@ class PageObject {
   }
 }
 
+function TestWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <AppWrapper>
+      <FeedUrlEntry />
+      {children}
+    </AppWrapper>
+  )
+}
+
+function renderWithAppState() {
+  return renderHook(() => useAppState(), { wrapper: TestWrapper })
+}
+
 describe('FeedUrlEntry', () => {
   it('is initially empty with no error', () => {
     const page = new PageObject()
 
-    renderWithApp(<FeedUrlEntry />)
+    renderWithAppState()
 
     expect(page.inputElement).toHaveProperty('value', '')
     expect(page.errorElement).toBeNull()
@@ -64,7 +74,7 @@ describe('FeedUrlEntry', () => {
     window.testing.server.use(http.get(testUrl, () => HttpResponse.error()))
     setDocumentUrl(testUrl)
 
-    renderWithApp(<FeedUrlEntry />)
+    renderWithAppState()
 
     expect(page.inputElement).toHaveProperty('value', testUrl)
   })
@@ -72,7 +82,7 @@ describe('FeedUrlEntry', () => {
   it('shows an error for empty input after user starts typing', async () => {
     const page = new PageObject()
 
-    renderWithApp(<FeedUrlEntry />)
+    renderWithAppState()
 
     await page.setUrl('test')
     await page.setUrl('')
@@ -84,7 +94,7 @@ describe('FeedUrlEntry', () => {
   it('shows an error when a non-url is entered', async () => {
     const page = new PageObject()
 
-    renderWithApp(<FeedUrlEntry />)
+    renderWithAppState()
 
     await page.setUrl('not a valid url')
 
@@ -97,7 +107,7 @@ describe('FeedUrlEntry', () => {
   it('shows an error when an invalid https url is entered', async () => {
     const page = new PageObject()
 
-    renderWithApp(<FeedUrlEntry />)
+    renderWithAppState()
 
     await page.setUrl('https://not a valid url')
 
@@ -109,24 +119,16 @@ describe('FeedUrlEntry', () => {
 
   it('updates the feed URL when entered URL is valid', async () => {
     const page = new PageObject()
-    const statePage = new AppStateConsumerPage()
     const testUrl = 'https://example.com/.rss'
 
     window.testing.server.use(http.get(testUrl, () => HttpResponse.error()))
 
-    renderWithApp(
-      <>
-        <FeedUrlEntry />
-        <AppStateConsumer />
-      </>,
-    )
-
-    expect(statePage.feedUrl).toBeEmpty()
+    const { result } = renderWithAppState()
 
     await page.submitUrl(testUrl)
 
     await waitFor(() => {
-      expect(statePage.feedUrl).toEqual(testUrl)
+      expect(result.current.feedUrl).toEqual(testUrl)
     })
   })
 })
